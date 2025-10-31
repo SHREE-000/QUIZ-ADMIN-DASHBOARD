@@ -21,7 +21,7 @@ export default function RegisterPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = sessionStorage.getItem("user");
     const token = user ? JSON.parse(user).userDetails?.token : null;
     if (token) {
       console.error("Token is found, redirecting to Dashboard.");
@@ -70,11 +70,11 @@ export default function RegisterPage() {
         email,
         password,
       });
-      if (res.status === 200) {
-        localStorage.setItem("user", JSON.stringify(res.data));
-        router.push("/dashboard");
+      if (res.status === 201) {
+        sessionStorage.setItem("user", JSON.stringify(res.data));
+        router.push("/dashboard?register=true");
       }
-      router.push("/dashboard");
+      router.push("/dashboard?register=true");
     } catch (error) {
       console.error(error);
       toaster.create({

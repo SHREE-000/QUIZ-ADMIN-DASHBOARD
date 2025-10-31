@@ -64,10 +64,14 @@ export default function LoginPage() {
         );
         if (res.status === 200) {
           sessionStorage.setItem("user", JSON.stringify(res.data));
-          router.push("/dashboard");
+          router.push("/dashboard?login=true");
         }
-      } catch (error) {
-        alert("Invalid credentials!");
+      } catch (error: unknown) {
+                toaster.create({
+          type: "error",
+          title: "Failed!",
+          description: `${(error as Error).message} ? ${(error as Error).message} : Invalid credentials!`,
+        });
       }
     }
   };
