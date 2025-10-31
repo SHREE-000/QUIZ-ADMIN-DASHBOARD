@@ -3,16 +3,16 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import {
-  ColorModeButton,
-  DarkMode,
-  LightMode,
-  useColorMode,
-  useColorModeValue,
-} from "@/src/components/ui/color-mode";
-import { Box, Button, Stack, Text } from "@chakra-ui/react/";
 import { toaster } from "@/src/components/ui/toaster";
-import { Tooltip } from "@/src/components/ui/tooltip";
+import {
+  Button,
+  Field,
+  Fieldset,
+  Input,
+  Stack,
+} from "@chakra-ui/react";
+import Link from "next/link";
+import "../style.css";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -20,30 +20,50 @@ export default function LoginPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const user = localStorage.getItem("user");
+    const user = sessionStorage.getItem("user");
     const token = user ? JSON.parse(user).userDetails?.token : null;
     if (token) {
       console.error("Token is found, redirecting to Dashboard.");
       router.push("/dashboard");
     }
   }, [router]);
-  const handleLogin = async (e) => {
+    const validateForm = () => {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) {
+        toaster.create({
+          type: "error",
+          title: "Failed!",
+          description: "Please enter a valid email address.",
+        });
+        return false;
+      }
+      if (password.length < 6) {
+        toaster.create({
+          type: "error",
+          title: "Failed!",
+          description: "Password must be at least 6 characters long.",
+        });
+        return false;
+      }
+      return true;
+    }; 
+  const handleLogin = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
-    const userDetails = localStorage.getItem("user");
+    if (!validateForm()) return;
+    const userDetails = sessionStorage.getItem("user");
     if (userDetails?.trim()) {
-      alert("Login successful!");
       router.push("/dashboard");
     } else {
       try {
         const res = await axios.post(
-          `${process.env.NEXT_PUBLIC_API}/auth/login`,
+          `${process.env.NEXT_PUBLIC_API}/login`,
           {
             email,
             password,
           }
         );
         if (res.status === 200) {
-          localStorage.setItem("user", JSON.stringify(res.data));
+          sessionStorage.setItem("user", JSON.stringify(res.data));
           router.push("/dashboard");
         }
       } catch (error) {
@@ -54,75 +74,43 @@ export default function LoginPage() {
 
   return (
     <div className="form-container">
-      {/* <Stack spacing={6} align="center" mt={10}>
-      <Tooltip content="Click to save your work!" showArrow>
-        <Button colorScheme="blue">Save</Button>
-      </Tooltip>
-
-      <Tooltip content="Disabled tooltip" disabled>
-        <Button colorScheme="gray">No Tooltip</Button>
-      </Tooltip>
-
-      <Tooltip
-        content="This tooltip isn’t portalled"
-        portalled={false}
-        showArrow
-      >
-        <Button colorScheme="purple">Inline Tooltip</Button>
-      </Tooltip>
-    </Stack> */}
-      {/* <Stack spacing={3} align="center" mt={10}>
-      <Button
-        colorScheme="green"
-        onClick={() =>
-          toaster.create({
-            type: "success",
-            title: "Quiz Published!",
-            description: "Your quiz is now live.",
-          })
-        }
-      >
-        Show Success
-      </Button>
-
-      <Button
-        colorScheme="red"
-        onClick={() =>
-          toaster.create({
-            type: "error",
-            title: "Failed!",
-            description: "Something went wrong.",
-          })
-        }
-      >
-        Show Error
-      </Button>
-    </Stack> */}
-      <h2>Login to LMS</h2>
-      <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          placeholder="Enter Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Enter Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
-
-      <p>
-        Don’t have an account?{" "}
-        <span className="link" onClick={() => router.push("/auth/register")}>
-          Register here
-        </span>
-      </p>
+       <Fieldset.Root size="lg" maxW="md">
+         <Stack>
+           <Fieldset.Legend>QUIZ ADMIN PLATFORM</Fieldset.Legend>
+           <Fieldset.HelperText>
+             Login quiz admin portal below.
+           </Fieldset.HelperText>
+         </Stack>
+ 
+         <Fieldset.Content>
+           <Field.Root>
+             <Field.Label>Email address</Field.Label>
+             <Input
+               onChange={(e) => setEmail(e.target.value)}
+               name="email"
+               type="email"
+               required
+             />
+           </Field.Root>
+ 
+           <Field.Root>
+             <Field.Label>Password</Field.Label>
+             <Input
+               onChange={(e) => setPassword(e.target.value)}
+               name="password"
+               type="password"
+               required
+             />
+           </Field.Root>
+         </Fieldset.Content>
+ 
+         <Button type="submit" onClick={handleLogin}>
+           Sign In
+         </Button>
+           <Fieldset.HelperText>
+             Already have an account? <Link href="/auth/register" className="link">Signup here</Link>
+           </Fieldset.HelperText>
+       </Fieldset.Root>
     </div>
   );
 }

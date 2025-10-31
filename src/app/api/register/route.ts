@@ -1,0 +1,42 @@
+import { NextResponse } from "next/server";
+import { connectDB } from "@/src/lib/database";
+import User from "../../models/user";
+import { EMAIL_DUPLICATE } from "../../constants/auth.js";
+import jwt from "jsonwebtoken";
+
+export async function POST(request: Request) {
+  try {
+    await connectDB();
+    const body = await request.json();
+    const { email, username, password } = body;
+
+    if (!email || !password || !username) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+    const isDuplicate = await User.findOne({ email });
+    if (isDuplicate)
+      return NextResponse.json({ error: EMAIL_DUPLICATE }, { status: 400 });
+    const { _id } = await new User({
+      email,
+      username,
+      password,
+      isAdmin: false,
+      isActive: true,
+    }).save();
+    const metaData = { email, username, _id, isAdmin: false, isActive: true };
+    const payload = {
+      access_token: await jwt.sign(metaData, process.env.JWT_SECRET),
+      ...metaData,
+    };
+    return NextResponse.json(payload, { status: 201 });
+  } catch (error: unknown) {
+    console.error("Registration error:", error);
+    return NextResponse.json(
+      { error: (error as Error).message || "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
