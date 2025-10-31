@@ -13,20 +13,20 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 import "../style.css";
+import { useAuth } from "@/src/context/authContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
+  const { token } = useAuth() as { token?: string | null };
 
   useEffect(() => {
-    const user = sessionStorage.getItem("user");
-    const token = user ? JSON.parse(user).userDetails?.token : null;
     if (token) {
       console.error("Token is found, redirecting to Dashboard.");
       router.push("/dashboard");
     }
-  }, [router]);
+  }, [router, token]);
     const validateForm = () => {
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailPattern.test(email)) {

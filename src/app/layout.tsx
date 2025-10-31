@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Provider } from "../components/ui/provider";
+import { AuthProvider } from "../context/authContext";
 
 
 export const metadata: Metadata = {
@@ -12,7 +13,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html suppressHydrationWarning>
       <body>
+        <AuthProvider>
         <Provider>{children}</Provider>
+        </AuthProvider>
       </body>
     </html>
   )

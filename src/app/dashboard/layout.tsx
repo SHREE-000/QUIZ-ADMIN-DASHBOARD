@@ -1,18 +1,10 @@
-'use client';
-
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+export const metadata = {
+  title: " Quiz Admin",
+  description: "Dashboard for Quiz Admin",
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
-  useEffect(() => {
-    const user = sessionStorage.getItem("user");
-    const token = user ? JSON.parse(user)?.access_token : null;
-    if (!token) {
-      console.error("Token is not found, redirecting to Login.");
-      router.push("/auth/login");
-    }
-  }, [router]);
+
   return (
     <html lang="en">
       <body>
