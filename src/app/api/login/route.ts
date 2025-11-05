@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/database";
 import User from "../../../models/user";
-import { NO_EMAIL, PW_ERR } from "../../constants/auth.js";
+import { NO_EMAIL, PW_ERR } from "../../../utils/constant.js";
 import jwt from "jsonwebtoken";
 
 export async function POST(request: Request) {

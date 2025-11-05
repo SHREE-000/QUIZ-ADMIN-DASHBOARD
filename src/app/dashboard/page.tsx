@@ -1,8 +1,7 @@
 import axios from "axios";
-import "./style.css";
+import "../style.css";
 import {
   Button,
-  Card,
   For,
   Heading,
   SimpleGrid,
@@ -11,6 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { LuArrowRight } from "react-icons/lu";
 import Link from "next/link";
+import CustomCard from "@/src/components/dashboard/Card";
 
 export default async function DashboardPage() {
   const res = await axios.get(process.env.NEXT_PUBLIC_API + "/stream");
@@ -24,8 +24,9 @@ export default async function DashboardPage() {
           Below are the streams you have created. You can manage existing
           streams or create new ones to organize your quiz content effectively.
         </Text>
-        <Button>
-          <Link href="/dashboard/streams/create">Create Stream <LuArrowRight /></Link>
+        <Button direction="row">
+          <Link href="/dashboard/stream/create">Create Stream</Link>
+          <LuArrowRight />
         </Button>
       </Stack>
       <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
@@ -41,15 +42,7 @@ export default async function DashboardPage() {
             },
             idx: number
           ) => (
-            <Card.Root width="100%" variant="subtle" key={idx}>
-              <Card.Body gap="2">
-                <Card.Title mb="2">{stream.stream}</Card.Title>
-                <Card.Description>{stream.description}</Card.Description>
-              </Card.Body>
-              <Card.Footer justifyContent="flex-end">
-                <Button>Manage</Button>
-              </Card.Footer>
-            </Card.Root>
+            <CustomCard stream={stream} idx={idx} />
           )}
         </For>
       </SimpleGrid>

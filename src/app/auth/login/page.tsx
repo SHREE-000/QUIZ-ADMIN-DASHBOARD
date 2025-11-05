@@ -12,7 +12,7 @@ import {
   Stack,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import "../style.css";
+import "../../style.css";
 import { useAuth } from "@/src/context/authContext";
 
 export default function LoginPage() {
