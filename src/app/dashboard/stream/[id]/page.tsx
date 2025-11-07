@@ -14,17 +14,29 @@ import {
   useFileUploadContext,
   HStack,
   Image,
+  Box,
+  Popover,
+  Portal,
+  Group,
+  Text,
+  VStack,
+  Flex,
+  IconButton,
+  PopoverTrigger,
 } from "@chakra-ui/react";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "../../../style.css";
 import axios from "axios";
 import { LuFileImage, LuFileUp, LuX } from "react-icons/lu";
-import { toaster } from "@/src/components/ui/toaster";
 import { useParams } from "next/navigation";
 import { FaEdit } from "react-icons/fa";
 import { Tooltip } from "@/src/components/ui/tooltip";
-import { MdEditOff } from "react-icons/md";
+import { MdEditOff, MdOutlineClose } from "react-icons/md";
+import { useColorModeValue } from "@/src/components/ui/color-mode";
+import { FiFileText, FiX } from "react-icons/fi";
+import { set } from "mongoose";
+import { toaster } from "@/src/components/ui/toaster";
 
 const FileUploadList = () => {
   const fileUpload = useFileUploadContext();
@@ -57,11 +69,20 @@ const FileUploadList = () => {
 
 export default function StreamViewPage() {
   const [stream, setStream] = useState("");
+  const [updatedStream, setUpdatedStream] = useState("");
   const [description, setDescription] = useState("");
+  const [updatedDescription, setUpdatedDescription] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
+  const [img, setImg] = useState<string[]>([]);
+  const [pdf, setPdf] = useState<string[]>([]);
+  const [removedImg, setRemovedImg] = useState<string[]>([]);
+  const [removedPdf, setRemovedPdf] = useState<string[]>([]);
+  const [removedVideoLinks, setRemovedVideoLinks] = useState<string[]>([]);
+  const [newVideoLinks, setNewVideoLinks] = useState<string[]>([]);
   const [uploadedImg, setUploadedImg] = useState<File[]>([]);
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
+  const ref = useRef<HTMLButtonElement | null>(null);
 
   const params = useParams();
   const { id } = params;
@@ -73,10 +94,11 @@ export default function StreamViewPage() {
       );
       const data = response.data;
       setStream(data.stream);
-      setDescription(data.description);
-      setVideoLinks(data.videoContent);
-      setUploadedImg(data.imageContent);
-      setUploadedPdf(data.pdfContent);
+      setDescription(data.description || "");
+      setRemovedVideoLinks(data.videoContent || []);
+      setVideoLinks(data.videoContent || []);
+      setImg(data.imageContent);
+      setPdf(data.pdfContent);
     };
     fetchStream();
   }, [id]);
@@ -89,10 +111,20 @@ export default function StreamViewPage() {
     setUploadedPdf(Array.from(files ?? []));
   };
 
+  const handleRemovePdf = (fileName: string) => {
+    setRemovedPdf((prev) => [...prev, fileName]);
+    setPdf((prev) => prev.filter((f) => f !== fileName));
+  };
+
+  const handleRemoveImg = (fileName: string) => {
+    setRemovedImg((prev) => [...prev, fileName]);
+    setImg((prev) => prev.filter((f) => f !== fileName));
+  };
+
   const handleUpdate = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append("stream", stream);
+    formData.append("updatedStream", updatedStream);
     if (!stream.trim()) {
       toaster.create({
         type: "error",
@@ -101,8 +133,12 @@ export default function StreamViewPage() {
       });
       return;
     }
-    formData.append("description", description);
-    formData.append("video", videoLinks.join(","));
+    formData.append("updatedDescription", updatedDescription);
+    formData.append("newVideo", newVideoLinks.join(","));
+    formData.append("removedImg", removedImg.join(","));
+    formData.append("removedPdf", removedPdf.join(","));
+    formData.append("removedVideo", removedVideoLinks.join(","));
+    // Append newly uploaded files
     // Filter out duplicates
     [
       ...new Map(
@@ -120,8 +156,8 @@ export default function StreamViewPage() {
       formData.append("pdf", file);
     });
     try {
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/stream`,
+      const response = await axios.put(
+        `${process.env.NEXT_PUBLIC_API}/stream/${id}`,
         formData
       );
 
@@ -141,12 +177,14 @@ export default function StreamViewPage() {
     }
   };
 
+  const bg = useColorModeValue("gray.50", "gray.800");
+  const border = useColorModeValue("gray.200", "gray.700");
   return (
     <Stack
       align="center"
       p={4}
       gap={6}
-      h="lvh"
+      h="auto"
       boxShadow="rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;"
     >
       <Fieldset.Root size="lg" maxW="md">
@@ -180,7 +218,13 @@ export default function StreamViewPage() {
             <Input
               value={stream}
               disabled={!isEditMode}
-              onChange={(e) => setStream(e.target.value)}
+              onChange={(e) => {
+                setStream(e.target.value);
+                setUpdatedStream(() => {
+                  if (stream !== e.target.value) return e.target.value;
+                  return "";
+                });
+              }}
               name="stream"
               type="text"
               placeholder="Enter stream name"
@@ -193,7 +237,13 @@ export default function StreamViewPage() {
             <Textarea
               value={description}
               disabled={!isEditMode}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setUpdatedDescription(() => {
+                  if (description !== e.target.value) return e.target.value;
+                  return "";
+                });
+              }}
               name="description"
               placeholder="Enter stream description"
             />
@@ -203,12 +253,41 @@ export default function StreamViewPage() {
             <TagsInput.Root
               value={videoLinks}
               disabled={!isEditMode}
-              onValueChange={(newTags) => setVideoLinks(newTags.value)}
+              onValueChange={(newTags) => {
+                setRemovedVideoLinks((prev) =>
+                  prev.filter((item) => !newTags.value.includes(item))
+                );
+                setVideoLinks(newTags.value);
+              }}
             >
-              <TagsInput.Label>Youtube Video Links</TagsInput.Label>
+              <TagsInput.Label>
+                Remove Existing Youtube Video Links
+              </TagsInput.Label>
               <TagsInput.Control>
                 <TagsInput.Items />
-                <TagsInput.Input placeholder="Add Youtube video link..." />
+              </TagsInput.Control>
+            </TagsInput.Root>
+          </Field.Root>
+
+          <Field.Root>
+            <TagsInput.Root
+              value={newVideoLinks}
+              disabled={!isEditMode}
+              onValueChange={(newTags) => setNewVideoLinks(newTags.value)}
+            >
+              <TagsInput.Label>Add New Youtube Video Links</TagsInput.Label>
+              <TagsInput.Control>
+                {isEditMode ? (
+                  <Tooltip content="Remove Youtube video link">
+                    <TagsInput.Items />
+                  </Tooltip>
+                ) : (
+                  <TagsInput.Items style={{ cursor: "not-allowed" }} />
+                )}
+                <TagsInput.Input
+                  style={{ cursor: isEditMode ? "text" : "not-allowed" }}
+                  placeholder="Add Youtube video link..."
+                />
               </TagsInput.Control>
               <Span textStyle="xs" color="fg.muted" ms="auto">
                 Press Enter or Return to add Youtube Video Links
@@ -217,7 +296,184 @@ export default function StreamViewPage() {
           </Field.Root>
 
           <Field.Root>
-            <Image rounded="md" src="https://i.pravatar.cc/300?img=4" alt="John Doe" />
+            <Field.Label>Remove Images</Field.Label>
+            {img && typeof img[0] === "string" && (
+              <Stack direction="row" gap={4} wrap="wrap">
+                {img.map((imgUrl, idx) => (
+                  <Box
+                    key={idx}
+                    position="relative"
+                    display="inline-block"
+                    m={2}
+                    w="160px"
+                    h="160px"
+                  >
+                    <Image
+                      src={imgUrl}
+                      alt={`Uploaded image ${idx + 1}`}
+                      rounded="md"
+                      boxSize="160px"
+                      objectFit="cover"
+                    />
+                    <Popover.Root positioning={{ placement: "bottom-end" }}>
+                      <Popover.Trigger asChild>
+                        <Button
+                          disabled={!isEditMode}
+                          size="xs"
+                          colorScheme="red"
+                          position="absolute"
+                          top="2px"
+                          right="2px"
+                          aria-label="Remove image"
+                          rounded="full"
+                          bg="yellow.100"
+                          _hover={{ bg: "red.100" }}
+                        >
+                          {isEditMode ? (
+                            <Tooltip content="Remove image">
+                              <MdOutlineClose color="black" />
+                            </Tooltip>
+                          ) : (
+                            <MdOutlineClose color="grey" />
+                          )}
+                        </Button>
+                      </Popover.Trigger>
+                      <Portal>
+                        <Popover.Positioner>
+                          <Popover.Content>
+                            <Popover.Arrow />
+                            <Popover.Body>
+                              Are you sure you want to remove{" "}
+                              <Text fontWeight="bold">
+                                {
+                                  imgUrl.split("/")[
+                                    imgUrl.split("/").length - 1
+                                  ]
+                                }
+                              </Text>{" "}
+                              image?
+                            </Popover.Body>
+                            <Popover.Footer>
+                              <Group flex="1" justifyContent="flex-end" gap="2">
+                                <Popover.CloseTrigger asChild>
+                                  <Button size="sm" ref={ref}>
+                                    Cancel
+                                  </Button>
+                                </Popover.CloseTrigger>
+                                <Popover.CloseTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleRemoveImg(imgUrl)}
+                                  >
+                                    Remove
+                                  </Button>
+                                </Popover.CloseTrigger>
+                              </Group>
+                            </Popover.Footer>
+                            <Popover.CloseTrigger />
+                          </Popover.Content>
+                        </Popover.Positioner>
+                      </Portal>
+                    </Popover.Root>
+                  </Box>
+                ))}
+              </Stack>
+            )}
+            {pdf.length === 0 && (
+              <Box textAlign="center" color="gray.500" py={2}>
+                No Image files uploaded
+              </Box>
+            )}
+          </Field.Root>
+
+          <Field.Root>
+            <Field.Label>Remove PDF</Field.Label>
+            <VStack align="stretch" gap={2} mt={4}>
+              {pdf.map((file) => (
+                <Flex
+                  key={file}
+                  align="center"
+                  justify="space-between"
+                  p={2}
+                  borderWidth="1px"
+                  borderColor={border}
+                  rounded="md"
+                  bg={bg}
+                  _hover={{ bg }}
+                >
+                  <Flex align="center" justify="space-between" gap={2}>
+                    <Box color="blue.500">
+                      <FiFileText />
+                    </Box>
+                    <Text fontSize="sm">
+                      {file.split("/")[file.split("/").length - 1]}
+                    </Text>
+                    <Popover.Root initialFocusEl={() => ref.current}>
+                      <Popover.Trigger asChild>
+                        <Button
+                          disabled={!isEditMode}
+                          size="xs"
+                          colorScheme="red"
+                          alignItems="right"
+                          top="2px"
+                          right="2px"
+                          aria-label="Remove PDF"
+                          rounded="full"
+                          bg="yellow.100"
+                          _hover={{ bg: "red.100" }}
+                        >
+                          {isEditMode ? (
+                            <Tooltip content="Remove PDF">
+                              <MdOutlineClose color="black" />
+                            </Tooltip>
+                          ) : (
+                            <MdOutlineClose color="grey" />
+                          )}
+                        </Button>
+                      </Popover.Trigger>
+                      <Portal>
+                        <Popover.Positioner>
+                          <Popover.Content>
+                            <Popover.Arrow />
+                            <Popover.Body>
+                              Are you sure you want to remove{" "}
+                              <Text fontWeight="bold">
+                                {file.split("/")[file.split("/").length - 1]}
+                              </Text>{" "}
+                              PDF?
+                            </Popover.Body>
+                            <Popover.Footer>
+                              <Group flex="1" justifyContent="flex-end" gap="2">
+                                <Popover.CloseTrigger asChild>
+                                  <Button size="sm" ref={ref}>
+                                    Cancel
+                                  </Button>
+                                </Popover.CloseTrigger>
+                                <Popover.CloseTrigger asChild>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => handleRemovePdf(file)}
+                                  >
+                                    Remove
+                                  </Button>
+                                </Popover.CloseTrigger>
+                              </Group>
+                            </Popover.Footer>
+                            <Popover.CloseTrigger />
+                          </Popover.Content>
+                        </Popover.Positioner>
+                      </Portal>
+                    </Popover.Root>
+                  </Flex>
+                </Flex>
+              ))}
+
+              {pdf.length === 0 && (
+                <Box textAlign="center" color="gray.500" py={2}>
+                  No PDF files uploaded
+                </Box>
+              )}
+            </VStack>
           </Field.Root>
 
           <Field.Root>

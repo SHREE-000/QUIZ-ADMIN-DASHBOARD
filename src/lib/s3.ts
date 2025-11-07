@@ -42,11 +42,23 @@ export const deleteFile = async (s3Params: S3Params) => {
   return data;
 };
 
-export const deleteFiles = async (s3Params: DeleteS3Params[]) => {
+export const deleteFiles = async (urls: string[]) => {
+  // Convert full URLs to S3 object keys
+  const s3ParamKeys: DeleteS3Params[] = urls.map((url) => {
+    const path = new URL(url).pathname; // e.g. /general-quiz/stream/xyz/img/file.jpg
+    const key = path.startsWith("/") ? path.slice(1) : path; // remove leading "/"
+    return { Key: key };
+  });
+
+  if (s3ParamKeys.length === 0) {
+    console.log("No files to delete.");
+    return;
+  }
+
   const command = new DeleteObjectsCommand({
     Bucket: AWS_BUCKET,
     Delete: {
-      Objects: s3Params.map(({ Key }) => ({ Key })),
+      Objects: s3ParamKeys.map(({ Key }) => ({ Key })),
     },
   });
   await s3.send(command);

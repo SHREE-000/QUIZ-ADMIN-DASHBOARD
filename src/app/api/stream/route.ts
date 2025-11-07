@@ -90,12 +90,7 @@ export async function POST(request: Request) {
     return NextResponse.json(streamDoc, { status: 200 });
   } catch (error: unknown) {
     const urls = [...imageContent, ...pdfContent];
-    const s3Params = urls.map(url => {
-      const path = new URL(url).pathname;
-      const key = path.replace(new RegExp(`^/${AWS_BUCKET}/`), '');
-      return { Key: key };
-    });
-    await deleteFiles(s3Params);
+    await deleteFiles(urls);
     console.error("Registration error:", error);
     return NextResponse.json(
       { error: (error as Error).message || "Internal Server Error" },
