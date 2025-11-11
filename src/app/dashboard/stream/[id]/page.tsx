@@ -21,22 +21,23 @@ import {
   Text,
   VStack,
   Flex,
-  IconButton,
-  PopoverTrigger,
+  Heading,
+  SimpleGrid,
+  For,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import "../../../style.css";
-import axios from "axios";
-import { LuFileImage, LuFileUp, LuX } from "react-icons/lu";
-import { useParams } from "next/navigation";
+import axios, { AxiosError } from "axios";
+import { LuArrowRight, LuFileImage, LuFileUp, LuX } from "react-icons/lu";
+import { useParams, useRouter } from "next/navigation";
 import { FaEdit } from "react-icons/fa";
 import { Tooltip } from "@/src/components/ui/tooltip";
 import { MdEditOff, MdOutlineClose } from "react-icons/md";
 import { useColorModeValue } from "@/src/components/ui/color-mode";
-import { FiFileText, FiX } from "react-icons/fi";
-import { set } from "mongoose";
+import { FiFileText } from "react-icons/fi";
 import { toaster } from "@/src/components/ui/toaster";
+import CustomCard from "@/src/components/dashboard/Card";
 
 const FileUploadList = () => {
   const fileUpload = useFileUploadContext();
@@ -85,6 +86,7 @@ export default function StreamViewPage() {
   const ref = useRef<HTMLButtonElement | null>(null);
 
   const params = useParams();
+  const router = useRouter();
   const { id } = params;
 
   useEffect(() => {
@@ -100,7 +102,18 @@ export default function StreamViewPage() {
       setImg(data.imageContent);
       setPdf(data.pdfContent);
     };
-    fetchStream();
+    try {
+      fetchStream();
+    } catch (error: unknown) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetch the the stream.",
+      });
+    }
   }, [id]);
 
   const handleChangeImg = (files: FileList | null) => {
@@ -161,25 +174,46 @@ export default function StreamViewPage() {
         formData
       );
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         toaster.create({
           type: "success",
           title: "Success!",
-          description: "Stream created successfully.",
+          description: "Stream updated successfully.",
+        });
+        setUpdatedStream("");
+        setUpdatedDescription("");
+        setNewVideoLinks([]);
+        setRemovedImg([]);
+        setRemovedPdf([]);
+        setRemovedVideoLinks([]);
+      } else {
+        toaster.create({
+          type: "error",
+          title: "Failed!",
+          description: "An error occurred while updating the stream.",
         });
       }
-    } catch (error) {
+      router.replace("");
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      const resErr =
+        axiosError.response?.data?.error ||
+        axiosError.message ||
+        "An error occurred while updating the stream.";
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: "An error occurred while creating the stream.",
+        description: resErr || "An error occurred while updating the stream.",
       });
     }
   };
 
   const bg = useColorModeValue("gray.50", "gray.800");
   const border = useColorModeValue("gray.200", "gray.700");
+  console.log(updatedStream, 'updatedStream updatedStream updatedStream');
+  
   return (
+    <>
     <Stack
       align="center"
       p={4}
@@ -515,9 +549,34 @@ export default function StreamViewPage() {
           </Field.Root>
         </Fieldset.Content>
 
-        <Button disabled={!isEditMode} type="submit" onClick={handleUpdate}>
-          Edit Stream
-        </Button>
+        <Popover.Root initialFocusEl={() => ref.current}>
+          <Popover.Trigger asChild>
+            <Button disabled={!isEditMode}>Edit Stream</Button>
+          </Popover.Trigger>
+          <Portal>
+            <Popover.Positioner>
+              <Popover.Content>
+                <Popover.Arrow />
+                <Popover.Body>Are you sure you want to edit?</Popover.Body>
+                <Popover.Footer>
+                  <Group flex="1" justifyContent="flex-end" gap="2">
+                    <Popover.CloseTrigger asChild>
+                      <Button size="sm" ref={ref}>
+                        Cancel
+                      </Button>
+                    </Popover.CloseTrigger>
+                    <Popover.CloseTrigger asChild>
+                      <Button size="sm" type="submit" onClick={handleUpdate}>
+                        Edit
+                      </Button>
+                    </Popover.CloseTrigger>
+                  </Group>
+                </Popover.Footer>
+                <Popover.CloseTrigger />
+              </Popover.Content>
+            </Popover.Positioner>
+          </Portal>
+        </Popover.Root>
         <Fieldset.HelperText>
           Don&apos;t need an account?{" "}
           <Link href="/dashboard" className="link">
@@ -526,5 +585,37 @@ export default function StreamViewPage() {
         </Fieldset.HelperText>
       </Fieldset.Root>
     </Stack>
+        <Stack align="center" p={4} gap={6}>
+      <Stack w={{ sm: "full", md: "1/2", lg: "1/3" }} boxShadow="rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;" gap={6} p={4}>
+        <Heading size="2xl" fontWeight="bold">Create and Manage Streams</Heading>
+        <Text mb="3" fontSize="md" color="fg.muted">
+          Below are the streams you have created. You can manage existing
+          streams or create new ones to organize your quiz content effectively.
+        </Text>
+        <Button direction="row">
+          <Link href="/dashboard/stream/create">Create Stream</Link>
+          <LuArrowRight />
+        </Button>
+      </Stack>
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
+        <For
+         each={data}>
+          {(
+            stream: {
+              _id: string;
+              stream: string;
+              description: string;
+              videoContent: string[];
+              imageContent: string[];
+              pdfContent: string[];
+            },
+            idx: number
+          ) => (
+            <CustomCard stream={stream} idx={idx} />
+          )}
+        </For>
+      </SimpleGrid>
+    </Stack>
+    </>
   );
 }

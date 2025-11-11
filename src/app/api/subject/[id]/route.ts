@@ -16,7 +16,7 @@ export async function GET(
     const { id } = await context.params;
     if (!id || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
-        { error: "Stream ID is required" },
+        { error: "Subject ID is required" },
         { status: 400 }
       );
     }

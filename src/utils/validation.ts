@@ -11,6 +11,7 @@ import {
   uploadBatchToS3,
   validateObjectId,
   validateS3URL,
+  validateYouTubeURL,
 } from "./general_fun";
 
 export const getAllCategoryQuery = (query: {
@@ -141,9 +142,21 @@ export const payloadValidationForCategoryUpdation = async ({
       pdfContent?: { $in: string[] };
     };
   }
-  const { img, pdf, description, videoContent = [], imageContent = [], pdfContent = [], removedImg = [], removedPdf = [], removedVideo = [], categoryName } = dto;
+  const {
+    img,
+    pdf,
+    description,
+    videoContent = [],
+    imageContent = [],
+    pdfContent = [],
+    removedImg = [],
+    removedPdf = [],
+    removedVideo = [],
+    categoryName,
+  } = dto;
   const imgFromS3: string[] = [];
   const pdfFromS3: string[] = [];
+  let isUpdateContentAvailable = false;
   if (img?.length > 0) {
     const uploaded = await uploadBatchToS3(img, url);
     imgFromS3.push(...uploaded.filter((x): x is string => x !== null));
@@ -154,7 +167,10 @@ export const payloadValidationForCategoryUpdation = async ({
   }
   const categoryId = dto.category;
   const payload: Dto = { $addToSet: {}, $pull: {} };
-  if (categoryName) payload[category] = categoryName;
+  if (categoryName) {
+    payload[category] = categoryName;
+    isUpdateContentAvailable = true;
+  }
   let search = {};
   let categoryErrMsg = "";
   if (category === "stream") categoryErrMsg = INVALID_STREAM_ID;
@@ -163,13 +179,13 @@ export const payloadValidationForCategoryUpdation = async ({
   const isObjectId = validateObjectId(categoryId);
   if (isObjectId) search = { _id: convertStringToOjbecId(categoryId) };
   else throw new Error(categoryErrMsg);
-  let isUpdateContentAvailable = false;
   if (description) {
     payload["description"] = description;
     isUpdateContentAvailable = true;
   }
   if (videoContent?.length > 0) {
-    const isValid = validateS3URL(videoContent);
+    const isValid = validateYouTubeURL(videoContent);
+    console.log(isValid, 'isValid');
     if (isValid) {
       payload.$addToSet["videoContent"] = { $each: videoContent };
       isUpdateContentAvailable = true;

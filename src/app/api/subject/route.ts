@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/database";
-import User from "../../../models/user";
-import { STREAM_CATEGORY, STREAM_S3_PATH } from "../../../utils/constant";
-import jwt from "jsonwebtoken";
+import { STREAM_CATEGORY, STREAM_S3_PATH, SUBJECT_CATEGORY } from "../../../utils/constant";
 import {
   getAllCategoryQuery,
   payloadValidationForCategoryCreation,
@@ -20,7 +18,7 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get("page") || "1");
     const perPage = parseInt(searchParams.get("perPage") || "30");
     const { filter, offset, limit } = getAllCategoryQuery({
-      category: "stream",
+      category: SUBJECT_CATEGORY,
       search,
       page,
       perPage,
