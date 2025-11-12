@@ -27,7 +27,7 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import "../../../../../style.css";
+import "../../../style.css";
 import axios, { AxiosError } from "axios";
 import { LuArrowRight, LuFileImage, LuFileUp, LuX } from "react-icons/lu";
 import { useParams, useRouter } from "next/navigation";
@@ -72,6 +72,7 @@ export default function StreamViewPage() {
   type Subject = {
     _id: string;
     stream: string;
+    subject: string;
     description: string;
     videoContent: string[];
     imageContent: string[];
@@ -100,13 +101,13 @@ export default function StreamViewPage() {
   const { id } = params;
 
   useEffect(() => {
-    const fetchSubjectByStream = async() => {
-            const response = await axios.get(
+    const fetchSubjectByStream = async () => {
+      const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API}/subject/stream?id=${id}`
       );
       const data = response.data;
       setSubject(data);
-    }
+    };
     const fetchStream = async () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API}/stream/${id}`
@@ -228,8 +229,7 @@ export default function StreamViewPage() {
 
   const bg = useColorModeValue("gray.50", "gray.800");
   const border = useColorModeValue("gray.200", "gray.700");
-  console.log(subject, 'subject subject subject');
-  
+
   return (
     <Stack
       gap={6}
@@ -611,7 +611,7 @@ export default function StreamViewPage() {
       </Stack>
       <Stack align="center" p={4} gap={6}>
         <Heading>Subjects Under the {stream}</Heading>
-        {/* <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
           {subject.map(
             (
               data: {
@@ -633,7 +633,7 @@ export default function StreamViewPage() {
               />
             )
           )}
-        </SimpleGrid> */}
+        </SimpleGrid>
       </Stack>
     </Stack>
   );
