@@ -16,7 +16,7 @@ import {
 } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useState } from "react";
-import "../../../style.css";
+import "../../../../../style.css";
 import axios from "axios";
 import { LuFileImage, LuFileUp, LuX } from "react-icons/lu";
 import { toaster } from "@/src/components/ui/toaster";

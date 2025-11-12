@@ -1,54 +1,17 @@
 "use client";
 
-import {
-  Button,
-  Field,
-  Fieldset,
-  FileUpload,
-  Float,
-  Input,
-  Span,
-  Stack,
-  TagsInput,
-  Textarea,
-  useFileUploadContext,
-  HStack,
-} from "@chakra-ui/react";
-import Link from "next/link";
+import { Fieldset, Stack } from "@chakra-ui/react";
 import React, { useState } from "react";
 import "../../../style.css";
 import axios from "axios";
-import { LuFileImage, LuFileUp, LuX } from "react-icons/lu";
 import { toaster } from "@/src/components/ui/toaster";
-
-const FileUploadList = () => {
-  const fileUpload = useFileUploadContext();
-  const files = fileUpload.acceptedFiles;
-  if (files.length === 0) return null;
-
-  return (
-    <FileUpload.ItemGroup>
-      <HStack gap={6} wrap="wrap">
-        {files.map((file) => (
-          <FileUpload.Item
-            w="auto"
-            boxSize="20"
-            p="2"
-            file={file}
-            key={file.name}
-          >
-            <FileUpload.ItemPreviewImage />
-            <Float placement="top-end">
-              <FileUpload.ItemDeleteTrigger boxSize="4" layerStyle="fill.solid">
-                <LuX />
-              </FileUpload.ItemDeleteTrigger>
-            </Float>
-          </FileUpload.Item>
-        ))}
-      </HStack>
-    </FileUpload.ItemGroup>
-  );
-};
+import FormHeader from "@/src/components/shared/atomic/FormHeader";
+import FormInput from "@/src/components/shared/atomic/FormInput";
+import FormTextArea from "@/src/components/shared/atomic/FormTextArea";
+import FormTags from "@/src/components/shared/atomic/FormTags";
+import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
+import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
+import ButtonWithBackLink from "@/src/components/shared/atomic/ButtonWithBackLink";
 
 export default function StreamCreatePage() {
   const [stream, setStream] = useState("");
@@ -122,102 +85,55 @@ export default function StreamCreatePage() {
       align="center"
       p={4}
       gap={6}
-      h="lvh"
+      h="auto"
       boxShadow="rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;"
     >
       <Fieldset.Root size="lg" maxW="md">
-        <Stack>
-          <Fieldset.Legend>Create a New Stream</Fieldset.Legend>
-          <Fieldset.HelperText>
-            Fill in the details below to create a new stream.
-          </Fieldset.HelperText>
-        </Stack>
-
+        <FormHeader
+          legend="Create a New Stream"
+          helperText="Fill in the details below to create a new stream."
+        />
         <Fieldset.Content>
-          <Field.Root>
-            <Field.Label>Stream</Field.Label>
-            <Input
-              onChange={(e) => setStream(e.target.value)}
-              name="stream"
-              type="text"
-              placeholder="Enter stream name"
-              required
-            />
-          </Field.Root>
-
-          <Field.Root>
-            <Field.Label>Description</Field.Label>
-            <Textarea
-              onChange={(e) => setDescription(e.target.value)}
-              name="description"
-              placeholder="Enter stream description"
-            />
-          </Field.Root>
-
-          <Field.Root>
-            <TagsInput.Root
-              //   value={videoLinks}
-              onValueChange={(newTags) => setVideoLinks(newTags.value)}
-            >
-              <TagsInput.Label>Youtube Video Links</TagsInput.Label>
-              <TagsInput.Control>
-                <TagsInput.Items />
-                <TagsInput.Input placeholder="Add Youtube video link..." />
-              </TagsInput.Control>
-              <Span textStyle="xs" color="fg.muted" ms="auto">
-                Press Enter or Return to add Youtube Video Links
-              </Span>
-            </TagsInput.Root>
-          </Field.Root>
-
-          <Field.Root>
-            <FileUpload.Root
-              accept="image/*"
-              maxFiles={25}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                event.preventDefault();
-                handleChangeImg(event.target.files);
-              }}
-            >
-              <FileUpload.HiddenInput />
-              <FileUpload.Trigger asChild>
-                <Button variant="outline" size="sm" w="100%">
-                  <LuFileImage /> Upload Images
-                </Button>
-              </FileUpload.Trigger>
-              <FileUploadList />
-            </FileUpload.Root>
-          </Field.Root>
-
-          <Field.Root>
-            <FileUpload.Root
-              accept="application/pdf"
-              maxFiles={25}
-              onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                event.preventDefault();
-                handleChangePdf(event.target.files);
-              }}
-            >
-              <FileUpload.HiddenInput />
-              <FileUpload.Trigger asChild>
-                <Button variant="outline" size="sm" w="100%">
-                  <LuFileUp /> Upload PDF
-                </Button>
-              </FileUpload.Trigger>
-              <FileUpload.List showSize clearable />
-            </FileUpload.Root>
-          </Field.Root>
+          <FormInput
+            label="Stream"
+            onChange={(e) => setStream(e.target.value)}
+          />
+          <FormTextArea
+            label="stream"
+            onChange={(e) => setDescription(e.target.value)}
+          />
+          <FormTags
+            label="Youtube Video Links"
+            onChange={(newTags) => setVideoLinks(newTags)}
+          />
+          <FormUploadImg
+            label="Upload Images"
+            onChange={(event: React.FormEvent<HTMLDivElement>) => {
+              event.preventDefault();
+              const input = (event.target as HTMLElement).querySelector(
+                'input[type="file"]'
+              ) as HTMLInputElement;
+              handleChangeImg(input?.files ?? null);
+            }}
+          />
+          <FormUploadPdf
+            label="Upload PDF"
+            onChange={(event: React.FormEvent<HTMLDivElement>) => {
+              event.preventDefault();
+              const input = (event.target as HTMLElement).querySelector(
+                'input[type="file"]'
+              ) as HTMLInputElement;
+              handleChangePdf(input?.files ?? null);
+            }}
+          />
         </Fieldset.Content>
-
-        <Button type="submit" onClick={handleCreate}>
-          Create Stream
-        </Button>
-        <Fieldset.HelperText>
-          Don&apos;t need an account?{" "}
-          <Link href="/dashboard" className="link">
-            Back to Dashboard
-          </Link>
-        </Fieldset.HelperText>
+        <ButtonWithBackLink
+          label="Create Stream"
+          link="/dashboard"
+          onClick={handleCreate}
+          helperText={"Don't need to create? "}
+          linkText="Back to Dashboard"
+        />
       </Fieldset.Root>
     </Stack>
   );
