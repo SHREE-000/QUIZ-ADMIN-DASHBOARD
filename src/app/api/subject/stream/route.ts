@@ -3,20 +3,19 @@ import { Subject } from "@/src/models/subject";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
-export async function GET(
-  request: Request,
-  context: { params: { course: string } }
-) {
+export async function GET(request: Request) {
   try {
     await connectDB();
-    const { course } = await context.params;
-    if (!course || !course.trim() || !mongoose.Types.ObjectId.isValid(course)) {
+    const url = new URL(request.url);
+    const searchParams = url.searchParams;
+    const id = searchParams.get("id") || "";
+    if (!id || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Course ID is required" },
         { status: 400 }
       );
-    }
-    const streamData = await Subject.find({course});
+    }    
+    const streamData = await Subject.find({stream: id});    
     if (!streamData) {
       return NextResponse.json({ error: "Stream not found" }, { status: 404 });
     }

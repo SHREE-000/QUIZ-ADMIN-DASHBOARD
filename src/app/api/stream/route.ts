@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/database";
-import User from "../../../models/user";
 import { STREAM_CATEGORY, STREAM_S3_PATH } from "../../../utils/constant";
-import jwt from "jsonwebtoken";
 import {
   getAllCategoryQuery,
   payloadValidationForCategoryCreation,
