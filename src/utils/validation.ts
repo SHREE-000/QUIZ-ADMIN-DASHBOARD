@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { deleteFiles } from "../lib/s3";
 import {
   INVALID_STREAM_ID,
@@ -49,8 +50,8 @@ export const payloadValidationForCategoryCreation = async ({
   category: "stream" | "subject" | "topic";
   url: string;
   dto: {
-    stream?: string;
-    subject?: string;
+    stream?: string | Types.ObjectId;
+    subject?: string | Types.ObjectId;
     topic?: string;
     description?: string;
     video?: string[];
@@ -58,10 +59,12 @@ export const payloadValidationForCategoryCreation = async ({
     pdf?: File[];
   };
 }) => {
-  const { description, video = [], img = [], pdf = [] } = dto;
+  const { description, video = [], img = [], pdf = [], stream, subject } = dto;
   interface Payload {
-    [key: string]: string | string[] | undefined;
-    stream?: string;
+    [key: string]: string | string[] | Types.ObjectId | undefined;
+    stream?: Types.ObjectId | string;
+    subject?: Types.ObjectId | string;
+    topic?: string;
     description?: string;
     videoContent?: string[];
     imageContent: string[];
@@ -86,7 +89,22 @@ export const payloadValidationForCategoryCreation = async ({
       ...uploaded.filter((x): x is string => x !== null && x !== undefined)
     );
   }
-  payload[category] = dto[category];
+  payload[category] =
+    typeof dto[category] === "string"
+      ? dto[category]
+      : dto[category]?.toString();
+  if (category === "subject" && typeof stream === "string" && stream?.trim())
+    payload["stream"] = convertStringToOjbecId(stream);
+  if (
+    category === "topic" &&
+    typeof stream === "string" &&
+    stream?.trim() &&
+    typeof subject === "string" &&
+    subject?.trim()
+  ) {
+    payload["stream"] = convertStringToOjbecId(stream);
+    payload["subject"] = convertStringToOjbecId(subject);
+  }
   if (description) payload["description"] = description;
   if (video?.length > 0) payload["videoContent"] = video;
   if (imgFromS3.length > 0) {
@@ -185,7 +203,7 @@ export const payloadValidationForCategoryUpdation = async ({
   }
   if (videoContent?.length > 0) {
     const isValid = validateYouTubeURL(videoContent);
-    console.log(isValid, 'isValid');
+    console.log(isValid, "isValid");
     if (isValid) {
       payload.$addToSet["videoContent"] = { $each: videoContent };
       isUpdateContentAvailable = true;

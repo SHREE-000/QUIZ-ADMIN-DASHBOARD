@@ -1,13 +1,14 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/database";
-import { STREAM_CATEGORY, STREAM_S3_PATH, SUBJECT_CATEGORY } from "../../../utils/constant";
+import { STREAM_S3_PATH, SUBJECT_CATEGORY } from "../../../utils/constant";
 import {
   getAllCategoryQuery,
   payloadValidationForCategoryCreation,
 } from "../../../utils/validation";
-import { Stream } from "../../../models/stream";
 import mongoose from "mongoose";
 import { deleteFiles } from "@/src/lib/s3";
+import { Subject } from "@/src/models/subject";
+import { validateObjectId } from "@/src/utils/general_fun";
 
 export async function GET(request: Request) {
   try {
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
       page,
       perPage,
     });
-    const stream = await Stream.find(filter).limit(limit).skip(offset).exec();
+    const stream = await Subject.find(filter).limit(limit).skip(offset).exec();
     return NextResponse.json(stream, { status: 200 });
   } catch (error: unknown) {
     console.error("Registration error:", error);
@@ -53,28 +54,24 @@ export async function POST(request: Request) {
     const imgFiles = (img as FormDataEntryValue[]).filter(
       (p): p is File => p instanceof File
     );
-    const stream = body.get("stream")?.toString() ?? "";
-    if (!stream?.trim()) {
+    const stream = body.get("stream")?.toString()?.trim() ?? "";
+    const subject = body.get("subject")?.toString()?.trim() ?? "";
+    const isStream = validateObjectId(stream);
+    if (!subject || stream || !isStream) {
       return NextResponse.json(
-        { error: "Stream name is required." },
+        { error: "Stream and Subject is required. Stream need to be valid object id" },
         { status: 400 }
       );
     }
-    const isStreamExists = await Stream.findOne({ stream: stream.trim() });
-    if (isStreamExists) {
-      return NextResponse.json(
-        { error: "Stream name already exists." },
-        { status: 400 }
-      );
-    }
-    const streamId = new mongoose.Types.ObjectId();
-    const s3StreamURL = `${STREAM_S3_PATH}/${streamId}`;
+    const subjectId = new mongoose.Types.ObjectId();
+    const s3SubjectURL = `${STREAM_S3_PATH}/${stream}/subject/${subjectId}`;
     const payload = await payloadValidationForCategoryCreation({
-      category: STREAM_CATEGORY,
-      url: s3StreamURL,
+      category: SUBJECT_CATEGORY,
+      url: s3SubjectURL,
       dto: {
         pdf: pdfFiles,
         img: imgFiles,
+        subject,
         stream,
         description: description?.toString().trim() || "",
         video: video?.toString()?.trim() ? video?.toString().split(",") : [],
@@ -82,7 +79,7 @@ export async function POST(request: Request) {
     });    
     imageContent = payload.imageContent;
     pdfContent = payload.pdfContent;
-    const doc = new Stream({ ...payload, _id: streamId });
+    const doc = new Subject({ ...payload, _id: subjectId });
     const streamDoc = await doc.save();
     return NextResponse.json(streamDoc, { status: 200 });
   } catch (error: unknown) {

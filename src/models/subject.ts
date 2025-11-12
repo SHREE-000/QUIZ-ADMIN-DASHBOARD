@@ -13,7 +13,7 @@ export interface ISubject extends Document {
 
 const SubjectSchema: Schema<ISubject> = new Schema<ISubject>(
   {
-    subject: { type: String, unique: true, required: true, index: true },
+    subject: { type: String, required: true, index: true },
     stream: { type: Schema.Types.ObjectId, ref: Stream, required: true },
     description: { type: String, default: "" },
     videoContent: { type: [String], default: [] },

@@ -42,7 +42,7 @@ export default async function DashboardPage() {
             },
             idx: number
           ) => (
-            <CustomCard stream={stream} idx={idx} />
+            <CustomCard category="stream" data={stream} idx={idx} />
           )}
         </For>
       </SimpleGrid>
