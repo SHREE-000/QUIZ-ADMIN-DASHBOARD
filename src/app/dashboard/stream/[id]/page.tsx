@@ -229,7 +229,6 @@ export default function StreamViewPage() {
 
   const bg = useColorModeValue("gray.50", "gray.800");
   const border = useColorModeValue("gray.200", "gray.700");
-  console.log(subject, "subject subject subject");
 
   return (
     <Stack
