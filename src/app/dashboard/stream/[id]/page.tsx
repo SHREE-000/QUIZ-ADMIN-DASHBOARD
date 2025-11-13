@@ -1,41 +1,16 @@
 "use client";
 
 import {
-  Button,
-  Field,
   Fieldset,
-  FileUpload,
-  Float,
-  Input,
-  Span,
   Stack,
-  TagsInput,
-  Textarea,
-  useFileUploadContext,
-  HStack,
-  Image,
-  Box,
-  Popover,
-  Portal,
-  Group,
-  Text,
-  VStack,
-  Flex,
   Heading,
   SimpleGrid,
-  For,
 } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import "../../../style.css";
 import axios, { AxiosError } from "axios";
-import { LuArrowRight, LuFileImage, LuFileUp, LuX } from "react-icons/lu";
 import { useParams, useRouter } from "next/navigation";
-import { FaEdit } from "react-icons/fa";
-import { Tooltip } from "@/src/components/ui/tooltip";
-import { MdEditOff, MdOutlineClose } from "react-icons/md";
-import { useColorModeValue } from "@/src/components/ui/color-mode";
-import { FiFileText } from "react-icons/fi";
 import { toaster } from "@/src/components/ui/toaster";
 import CustomCard from "@/src/components/dashboard/Card";
 import FormHeader from "@/src/components/shared/atomic/FormHeader";
@@ -49,35 +24,6 @@ import FormRemovePdf from "@/src/components/shared/molecular/FormRemovePdf";
 import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormPopover from "@/src/components/shared/molecular/FormPopover";
-
-const FileUploadList = () => {
-  const fileUpload = useFileUploadContext();
-  const files = fileUpload.acceptedFiles;
-  if (files.length === 0) return null;
-
-  return (
-    <FileUpload.ItemGroup>
-      <HStack gap={6} wrap="wrap">
-        {files.map((file) => (
-          <FileUpload.Item
-            w="auto"
-            boxSize="20"
-            p="2"
-            file={file}
-            key={file.name}
-          >
-            <FileUpload.ItemPreviewImage />
-            <Float placement="top-end">
-              <FileUpload.ItemDeleteTrigger boxSize="4" layerStyle="fill.solid">
-                <LuX />
-              </FileUpload.ItemDeleteTrigger>
-            </Float>
-          </FileUpload.Item>
-        ))}
-      </HStack>
-    </FileUpload.ItemGroup>
-  );
-};
 
 export default function StreamViewPage() {
   type Subject = {
@@ -258,7 +204,7 @@ export default function StreamViewPage() {
           </Stack>
           <Fieldset.Content>
             <FormInput
-            value={stream}
+              value={stream}
               disabled={!isEditMode}
               label="Stream"
               onChange={(e) => {
@@ -320,7 +266,7 @@ export default function StreamViewPage() {
                 const input = (event.target as HTMLElement).querySelector(
                   'input[type="file"]'
                 ) as HTMLInputElement;
-                handleChangePdf(input?.files ?? null);
+                handleChangeImg(input?.files ?? null);
               }}
             />
             <FormUploadPdf
@@ -336,7 +282,7 @@ export default function StreamViewPage() {
             />
           </Fieldset.Content>
           <FormPopover
-          isEditMode={isEditMode}
+            isEditMode={isEditMode}
             label="Edit Stream"
             content="Are you sure you want to edit?"
             resolve="Edit"
@@ -344,7 +290,7 @@ export default function StreamViewPage() {
             onClick={() => {
               handleUpdate();
             }}
-          />   
+          />
           <Fieldset.HelperText>
             Don&apos;t need an account?{" "}
             <Link href="/dashboard" className="link">
