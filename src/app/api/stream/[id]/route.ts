@@ -38,18 +38,6 @@ export async function PUT(
   request: Request,
   context: { params: { id: string } }
 ) {
-    // interface Dto {
-    // stream?: string;
-    // description?: string;
-    // video?: string[];
-    // img?: File[];
-    // pdf?: File[];
-    // removedImg?: string[];
-    // removedPdf?: string[];
-    // removedVideo?: string[];   
-    // updatedStream?: string;
-    // updatedDescription?: string;
-    // }
   try {
     await connectDB();
     const { id } = await context.params;

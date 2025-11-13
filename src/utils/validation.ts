@@ -141,13 +141,15 @@ export const payloadValidationForCategoryUpdation = async ({
     removedImg?: string[];
     removedPdf?: string[];
     removedVideo?: string[];
+    stream?: string;
+    subject?: string;
   };
 }) => {
   interface Dto {
     description?: string;
     category?: string;
-    stream?: string;
-    subject?: string;
+    stream?: string | Types.ObjectId;
+    subject?: string | Types.ObjectId;
     topic?: string;
     $addToSet: {
       videoContent?: { $each: string[] };
@@ -171,6 +173,8 @@ export const payloadValidationForCategoryUpdation = async ({
     removedPdf = [],
     removedVideo = [],
     categoryName,
+    stream = "",
+    subject = ""
   } = dto;
   const imgFromS3: string[] = [];
   const pdfFromS3: string[] = [];
@@ -188,6 +192,13 @@ export const payloadValidationForCategoryUpdation = async ({
   if (categoryName) {
     payload[category] = categoryName;
     isUpdateContentAvailable = true;
+  }
+  if (category === 'subject') {
+    payload["stream"] = convertStringToOjbecId(stream);
+  }
+    if (category === 'topic') {
+    payload["stream"] = convertStringToOjbecId(stream);
+    payload["subject"] = convertStringToOjbecId(subject);
   }
   let search = {};
   let categoryErrMsg = "";

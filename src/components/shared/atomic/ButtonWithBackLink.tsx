@@ -1,4 +1,4 @@
-import { Button, Fieldset, Link, Stack } from "@chakra-ui/react";
+import { Button, Fieldset, Link } from "@chakra-ui/react";
 
 const ButtonWithBackLink = ({
   label,
@@ -6,7 +6,7 @@ const ButtonWithBackLink = ({
   linkText,
   link,
   onClick,
-  type = 'submit',
+  type = "submit",
 }: {
   label: string;
   helperText: string;
