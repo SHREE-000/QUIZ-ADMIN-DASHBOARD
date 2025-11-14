@@ -9,6 +9,7 @@ import mongoose from "mongoose";
 import { deleteFiles } from "@/src/lib/s3";
 import { Subject } from "@/src/models/subject";
 import { validateObjectId } from "@/src/utils/general_fun";
+import { Stream } from "@/src/models/stream";
 
 export async function GET(request: Request) {
   try {
@@ -17,7 +18,7 @@ export async function GET(request: Request) {
     const searchParams = url.searchParams;
     const search = searchParams.get("search") || "";
     const page = parseInt(searchParams.get("page") || "1");
-    const perPage = parseInt(searchParams.get("perPage") || "30");
+    const perPage = parseInt(searchParams.get("perPage") || "100");
     const { filter, offset, limit } = getAllCategoryQuery({
       category: SUBJECT_CATEGORY,
       search,
@@ -57,9 +58,29 @@ export async function POST(request: Request) {
     const stream = body.get("stream")?.toString()?.trim() ?? "";
     const subject = body.get("subject")?.toString()?.trim() ?? "";
     const isStream = validateObjectId(stream);
-    if (!subject || stream || !isStream) {
+    if (!subject || !stream || !isStream) {
       return NextResponse.json(
-        { error: "Stream and Subject is required. Stream need to be valid object id" },
+        {
+          error:
+            "Stream and Subject is required. Stream need to be valid object id",
+        },
+        { status: 400 }
+      );
+    }
+    const isStreamExists = await Stream.findById(stream);
+    if (!isStreamExists) {
+      return NextResponse.json(
+        { error: "Stream is not exists." },
+        { status: 400 }
+      );
+    }
+    const isSubExistsWithStream = await Subject.findOne({
+      stream: stream.trim(),
+      subject: subject.trim(),
+    });
+    if (isSubExistsWithStream) {
+      return NextResponse.json(
+        { error: `Subject name is exists with same stream - ${isStreamExists.stream}.` },
         { status: 400 }
       );
     }
@@ -76,7 +97,7 @@ export async function POST(request: Request) {
         description: description?.toString().trim() || "",
         video: video?.toString()?.trim() ? video?.toString().split(",") : [],
       },
-    });    
+    });
     imageContent = payload.imageContent;
     pdfContent = payload.pdfContent;
     const doc = new Subject({ ...payload, _id: subjectId });

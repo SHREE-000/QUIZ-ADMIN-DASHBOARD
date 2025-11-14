@@ -9,6 +9,7 @@ const FormTags = ({
 }) => {
   return (
     <Field.Root>
+      <Field.Label>{label}</Field.Label>
       <TagsInput.Root onValueChange={(details) => onChange(details.value)}>
         <TagsInput.Label></TagsInput.Label>
         <TagsInput.Control>

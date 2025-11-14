@@ -6,7 +6,7 @@ const FormInput = ({
   onChange,
   required = true,
   disabled = false,
-  value
+  value = ""
 }: {
   label: string;
   type?: string;
@@ -19,8 +19,8 @@ const FormInput = ({
     <Field.Root>
       <Field.Label>{label}</Field.Label>
       <Input
-        {...(value ? { value } : {})}
-        {...(disabled ? { disabled } : {})}
+        value={value}
+        disabled={disabled}
         onChange={onChange}
         name={label}
         type={type}

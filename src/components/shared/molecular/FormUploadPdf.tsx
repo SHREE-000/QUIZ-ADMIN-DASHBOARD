@@ -12,6 +12,7 @@ const FormUploadPdf = ({
 }) => {
   return (
     <Field.Root>
+      <Field.Label>{label}</Field.Label>
       <FileUpload.Root
         accept="application/pdf"
         maxFiles={maxFiles}

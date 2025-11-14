@@ -1,8 +1,7 @@
 "use client";
 
 import { Fieldset, Stack } from "@chakra-ui/react";
-import React, { useState } from "react";
-import "../../../style.css";
+import React, { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { toaster } from "@/src/components/ui/toaster";
 import FormHeader from "@/src/components/shared/atomic/FormHeader";
@@ -12,13 +11,49 @@ import FormTags from "@/src/components/shared/atomic/FormTags";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import ButtonWithBackLink from "@/src/components/shared/atomic/ButtonWithBackLink";
+import { Types } from "mongoose";
+import FormSelect from "@/src/components/shared/atomic/FormSelect";
 
-export default function StreamCreatePage() {
-  const [stream, setStream] = useState("");
+export default function SubjectCreatePage() {
+  interface StreamDto {
+    _id: string | Types.ObjectId;
+    stream: string;
+  }
+  interface Dto {
+    _id: string | Types.ObjectId;
+    data: string;
+  }
+
+  const [stream, setStream] = useState<string>("");
+  const [streams, setStreams] = useState<Dto[]>([]);
+  const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [uploadedImg, setUploadedImg] = useState<File[]>([]);
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchStream = async () => {
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API}/stream`);
+      const data = response.data;
+      const streamData = data.flatMap((stream: StreamDto) => [
+        { _id: stream._id, data: stream.stream },
+      ]);
+      setStreams(streamData);
+    };
+    try {
+      fetchStream();
+    } catch (error: unknown) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetch the the stream.",
+      });
+    }
+  }, []);
 
   const handleChangeImg = (files: FileList | null) => {
     setUploadedImg(Array.from(files ?? []));
@@ -31,12 +66,13 @@ export default function StreamCreatePage() {
   const handleCreate = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     const formData = new FormData();
+    formData.append("subject", subject);
     formData.append("stream", stream);
-    if (!stream.trim()) {
+    if (!subject.trim()) {
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: "Stream name is required.",
+        description: "Subject name is required.",
       });
       return;
     }
@@ -60,20 +96,21 @@ export default function StreamCreatePage() {
     });
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/stream`,
+        `${process.env.NEXT_PUBLIC_API}/subject`,
         formData
       );
 
       if (response.status === 200) {
-        setStream("");
-        setDescription("");
-        setUploadedPdf([]);
         setVideoLinks([]);
+        setUploadedPdf([]);
         setUploadedImg([]);
+        setDescription("");
+        setStream("");
+        setSubject("");
         toaster.create({
           type: "success",
           title: "Success!",
-          description: "Stream created successfully.",
+          description: "Subject created successfully.",
         });
       }
     } catch (error: unknown) {
@@ -81,11 +118,11 @@ export default function StreamCreatePage() {
       const resErr =
         axiosError.response?.data?.error ||
         axiosError.message ||
-        "An error occurred while creating the stream.";
+        "An error occurred while creating the subject.";
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: resErr || "An error occurred while creating the stream.",
+        description: resErr || "An error occurred while creating the subject.",
       });
     }
   };
@@ -100,18 +137,25 @@ export default function StreamCreatePage() {
     >
       <Fieldset.Root size="lg" maxW="md">
         <FormHeader
-          legend="Create a New Stream"
-          helperText="Fill in the details below to create a new stream."
+          legend="Create a New Subject"
+          helperText="Fill in the details below to create a new subject."
         />
         <Fieldset.Content>
           <FormInput
-            label="Stream"
-            onChange={(e) => setStream(e.target.value)}
+            label="Subject"
+            onChange={(e) => setSubject(e.target.value)}
           />
           <FormTextArea
-            label="stream"
+            label="subject"
             onChange={(e) => setDescription(e.target.value)}
           />
+          {streams[0] && (
+            <FormSelect
+              onChange={(newTags) => setStream(newTags[0])}
+              items={streams}
+              label="stream"
+            />
+          )}
           <FormTags
             label="Youtube Video Links"
             onChange={(newTags) => setVideoLinks(newTags)}
@@ -138,8 +182,8 @@ export default function StreamCreatePage() {
           />
         </Fieldset.Content>
         <ButtonWithBackLink
-          disabled={stream.trim() ? true : false}
-          label="Create Stream"
+          disabled={[stream, subject].some((v) => !v.trim())}
+          label="Create Subject"
           link="/dashboard"
           onClick={handleCreate}
           helperText={"Don't need to create? "}

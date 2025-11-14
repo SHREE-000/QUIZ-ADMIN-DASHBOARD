@@ -7,6 +7,7 @@ const ButtonWithBackLink = ({
   link,
   onClick,
   type = "submit",
+  disabled = false
 }: {
   label: string;
   helperText: string;
@@ -14,10 +15,11 @@ const ButtonWithBackLink = ({
   link: string;
   type?: "submit" | "button" | "reset" | undefined;
   onClick: React.MouseEventHandler<HTMLButtonElement>;
+  disabled?: boolean;
 }) => {
   return (
     <>
-      <Button type={type} onClick={onClick}>
+      <Button type={type} onClick={onClick} disabled={disabled}>
         {label}
       </Button>
       <Fieldset.HelperText>

@@ -52,6 +52,7 @@ const FormUploadImg = ({
 
   return (
     <Field.Root>
+      <Field.Label>{label}</Field.Label>
       <FileUpload.Root accept="image/*" maxFiles={maxFiles} onChange={onChange}>
         <FileUpload.HiddenInput />
         <FileUpload.Trigger asChild>

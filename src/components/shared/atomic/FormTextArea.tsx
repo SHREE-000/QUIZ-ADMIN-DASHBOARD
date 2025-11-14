@@ -4,7 +4,7 @@ const FormTextArea = ({
   label,
   onChange,
   required = false,
-  value,
+  value = "",
   disabled = false
 }: {
   label: string;
@@ -18,8 +18,8 @@ const FormTextArea = ({
     <Field.Root>
       <Field.Label>Description</Field.Label>
       <Textarea
-        {...(value ? { value } : {})}
-        {...(disabled ? { disabled } : {})}
+        value={value}
+        disabled={disabled}
         onChange={onChange}
         name={`${label} description`}
         placeholder={`Enter ${label} description`}

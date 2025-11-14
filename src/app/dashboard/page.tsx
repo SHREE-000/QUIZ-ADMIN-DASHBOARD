@@ -1,16 +1,8 @@
 import axios from "axios";
 import "../style.css";
-import {
-  Button,
-  For,
-  Heading,
-  SimpleGrid,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import { LuArrowRight } from "react-icons/lu";
-import Link from "next/link";
+import { For, Heading, SimpleGrid, Stack } from "@chakra-ui/react";
 import CustomCard from "@/src/components/dashboard/Card";
+import CardWithLink from "@/src/components/shared/molecular/CardWithLink";
 
 export default async function DashboardPage() {
   const res = await axios.get(process.env.NEXT_PUBLIC_API + "/stream");
@@ -18,17 +10,33 @@ export default async function DashboardPage() {
 
   return (
     <Stack align="center" p={4} gap={6}>
-      <Stack w={{ sm: "full", md: "1/2", lg: "1/3" }} boxShadow="rgba(50, 50, 93, 0.25) 0px 30px 60px -12px inset, rgba(0, 0, 0, 0.3) 0px 18px 36px -18px inset;" gap={6} p={4}>
-        <Heading size="2xl" fontWeight="bold">Create and Manage Streams</Heading>
-        <Text mb="3" fontSize="md" color="fg.muted">
-          Below are the streams you have created. You can manage existing
-          streams or create new ones to organize your quiz content effectively.
-        </Text>
-        <Button direction="row">
-          <Link href="/dashboard/stream/create">Create Stream</Link>
-          <LuArrowRight />
-        </Button>
-      </Stack>
+      <SimpleGrid
+        display="flex"
+        alignContent="center"
+        columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
+        gap={6}
+        p={4}
+      >
+        <CardWithLink
+          heading="Create New Streams"
+          content="Create new streams by clicking below button."
+          buttonText="Create Stream"
+          link={"/dashboard/stream/create"}
+        />
+        <CardWithLink
+          heading="Create New Subject"
+          content="Create new subjects by clicking below button."
+          buttonText="Create Subject"
+          link={"/dashboard/subject/create"}
+        />
+        <CardWithLink
+          heading="Create New Topic"
+          content="Create new topic by clicking below button."
+          buttonText="Create Topic"
+          link={"/dashboard/topic/create"}
+        />
+      </SimpleGrid>
+      <Heading>STREAMS</Heading>
       <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
         <For each={data}>
           {(
@@ -41,9 +49,7 @@ export default async function DashboardPage() {
               pdfContent: string[];
             },
             idx: number
-          ) => (
-            <CustomCard category="stream" data={stream} idx={idx} />
-          )}
+          ) => <CustomCard category="stream" data={stream} idx={idx} />}
         </For>
       </SimpleGrid>
     </Stack>
