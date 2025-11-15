@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     pdfContent = payload.pdfContent;
     const doc = new Stream({ ...payload, _id: streamId });
     const streamDoc = await doc.save();
-    return NextResponse.json(streamDoc, { status: 200 });
+    return NextResponse.json(streamDoc, { status: 201  });
   } catch (error: unknown) {
     const urls = [...imageContent, ...pdfContent];
     await deleteFiles(urls);

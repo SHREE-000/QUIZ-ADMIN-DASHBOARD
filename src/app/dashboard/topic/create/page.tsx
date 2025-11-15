@@ -128,7 +128,7 @@ export default function TopicCreatePage() {
         formData
       );
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         setVideoLinks([]);
         setUploadedPdf([]);
         setUploadedImg([]);
