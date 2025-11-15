@@ -52,7 +52,7 @@ const FormRemovePdf = ({
                          <Text fontSize="sm">
                            {file.split("/")[file.split("/").length - 1]}
                          </Text>
-                         <Popover.Root initialFocusEl={() => (ref as React.RefObject<HTMLButtonElement>).current}>
+                         <Popover.Root initialFocusEl={() => (ref as React.RefObject<HTMLButtonElement>)?.current}>
                            <Popover.Trigger asChild>
                              <Button
                                disabled={!isEditMode}

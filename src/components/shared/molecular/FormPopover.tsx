@@ -19,7 +19,7 @@ const FormPopover = ({
 }) => {
   return (
     <Popover.Root
-      initialFocusEl={() => (ref as React.RefObject<HTMLButtonElement>).current}
+      initialFocusEl={() => (ref as React.RefObject<HTMLButtonElement>)?.current}
     >
       <Popover.Trigger asChild>
         <Button disabled={!isEditMode}>{label}</Button>
