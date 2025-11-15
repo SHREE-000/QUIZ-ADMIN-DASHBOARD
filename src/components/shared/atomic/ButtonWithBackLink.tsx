@@ -24,7 +24,7 @@ const ButtonWithBackLink = ({
       </Button>
       <Fieldset.HelperText>
         {helperText}
-        <Link href={link} className="link">
+        <Link href={link} className="link" color="blue">
           {linkText}
         </Link>
       </Fieldset.HelperText>

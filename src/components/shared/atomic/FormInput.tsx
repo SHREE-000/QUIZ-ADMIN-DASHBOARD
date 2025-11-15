@@ -6,7 +6,7 @@ const FormInput = ({
   onChange,
   required = true,
   disabled = false,
-  value = ""
+  value
 }: {
   label: string;
   type?: string;

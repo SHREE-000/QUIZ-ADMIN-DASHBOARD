@@ -142,10 +142,12 @@ export default function SubjectCreatePage() {
         />
         <Fieldset.Content>
           <FormInput
+            value={subject}
             label="Subject"
             onChange={(e) => setSubject(e.target.value)}
           />
           <FormTextArea
+            value={description}
             label="subject"
             onChange={(e) => setDescription(e.target.value)}
           />

@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/database";
-import {
-  STREAM_S3_PATH,
-  TOPIC_CATEGORY,
-} from "../../../utils/constant";
+import { STREAM_S3_PATH, TOPIC_CATEGORY } from "../../../utils/constant";
 import {
   getAllCategoryQuery,
   payloadValidationForCategoryCreation,
@@ -58,36 +55,36 @@ export async function POST(request: Request) {
     const imgFiles = (img as FormDataEntryValue[]).filter(
       (p): p is File => p instanceof File
     );
+    const topic = body.get("stream")?.toString()?.trim() ?? "";
     const stream = body.get("stream")?.toString()?.trim() ?? "";
     const subject = body.get("subject")?.toString()?.trim() ?? "";
-    const topic = body.get("topic")?.toString()?.trim() ?? "";
     const isStream = validateObjectId(stream);
     const isSubject = validateObjectId(subject);
-    if (!subject || !stream || !isStream || !topic || !isSubject) {
+    if (!subject || !stream || !isStream || !isSubject) {
       return NextResponse.json(
         {
           error:
-            "Stream, subject and topic is required. Stream and Subject need to be valid object id",
+            "Topic, Stream and Subject is required. Stream and Subject need to be valid object id",
         },
         { status: 400 }
       );
     }
-    const isSubWithStreamExists = await Subject.findById(subject);
-    if (!isSubWithStreamExists) {
+    const isSubjectExists = await Subject.findOne({ _id: subject, stream });
+    if (!isSubjectExists) {
       return NextResponse.json(
-        { error: "Subject with stream is not exists." },
+        { error: "Stream is not exists." },
         { status: 400 }
       );
     }
-    const isTopicExistsWithStreamNsub = await Topic.findOne({
+    const isTopicExistsWithStreamAndSub = await Topic.findOne({
+      topic: topic.trim(),
       stream: stream.trim(),
       subject: subject.trim(),
-      steam: stream.trim(),
     });
-    if (isTopicExistsWithStreamNsub) {
+    if (isTopicExistsWithStreamAndSub) {
       return NextResponse.json(
         {
-          error: `Topic name is exists with same stream - ${isTopicExistsWithStreamNsub.stream} and subject - ${isTopicExistsWithStreamNsub.subject}.`,
+          error: `Topic name is exists with same stream and subject - ${isTopicExistsWithStreamAndSub.stream} - ${isTopicExistsWithStreamAndSub.subject}.`,
         },
         { status: 400 }
       );
@@ -100,16 +97,16 @@ export async function POST(request: Request) {
       dto: {
         pdf: pdfFiles,
         img: imgFiles,
+        topic,
         subject,
         stream,
-        topic,
         description: description?.toString().trim() || "",
         video: video?.toString()?.trim() ? video?.toString().split(",") : [],
       },
     });
     imageContent = payload.imageContent;
     pdfContent = payload.pdfContent;
-    const doc = new Topic({ ...payload, _id: topicId });
+    const doc = new Subject({ ...payload, _id: topicId });
     const streamDoc = await doc.save();
     return NextResponse.json(streamDoc, { status: 201 });
   } catch (error: unknown) {

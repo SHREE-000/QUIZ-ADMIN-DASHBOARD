@@ -105,10 +105,12 @@ export default function StreamCreatePage() {
         />
         <Fieldset.Content>
           <FormInput
+            value={stream}
             label="Stream"
             onChange={(e) => setStream(e.target.value)}
           />
           <FormTextArea
+            value={description}
             label="stream"
             onChange={(e) => setDescription(e.target.value)}
           />

@@ -4,7 +4,7 @@ const FormTextArea = ({
   label,
   onChange,
   required = false,
-  value = "",
+  value,
   disabled = false
 }: {
   label: string;

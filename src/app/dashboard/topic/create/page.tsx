@@ -14,21 +14,25 @@ import ButtonWithBackLink from "@/src/components/shared/atomic/ButtonWithBackLin
 import { Types } from "mongoose";
 import FormSelect from "@/src/components/shared/atomic/FormSelect";
 
-export default function TopicCreatePage() {
-  interface Dto {
+export default function SubjectCreatePage() {
+  interface StreamDto {
     _id: string | Types.ObjectId;
     stream: string;
+  }
+  interface SubDto {
+    _id: string | Types.ObjectId;
     subject: string;
   }
-  interface DataDto {
+  interface Dto {
     _id: string | Types.ObjectId;
     data: string;
   }
-  const [stream, setStream] = useState<string>("");
-  const [streams, setStreams] = useState<DataDto[]>([]);
-  const [subject, setSubject] = useState<string>("");
-  const [subjects, setSubjects] = useState<DataDto[]>([]);
+
   const [topic, setTopic] = useState("");
+  const [stream, setStream] = useState<string>("");
+  const [streams, setStreams] = useState<Dto[]>([]);
+  const [subjects, setSubjects] = useState<Dto[]>([]);
+  const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [uploadedImg, setUploadedImg] = useState<File[]>([]);
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
@@ -38,7 +42,7 @@ export default function TopicCreatePage() {
     const fetchStream = async () => {
       const response = await axios.get(`${process.env.NEXT_PUBLIC_API}/stream`);
       const data = response.data;
-      const streamData = data.flatMap((stream: Dto) => [
+      const streamData = data.flatMap((stream: StreamDto) => [
         { _id: stream._id, data: stream.stream },
       ]);
       setStreams(streamData);
@@ -58,18 +62,18 @@ export default function TopicCreatePage() {
   }, []);
 
   useEffect(() => {
-    const fetchStream = async () => {
+    const fetchSubject = async () => {
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API}/subject/stream?id=${stream}`
       );
       const data = response.data;
-      const subjectData = data.flatMap((subject: Dto) => [
+      const streamData = data.flatMap((subject: SubDto) => [
         { _id: subject._id, data: subject.subject },
       ]);
-      setSubjects(subjectData);
+      setSubjects(streamData);
     };
     try {
-      if (stream.trim()) fetchStream();
+      if (stream) fetchSubject();
     } catch (error: unknown) {
       toaster.create({
         type: "error",
@@ -77,7 +81,7 @@ export default function TopicCreatePage() {
         description:
           error instanceof Error
             ? error.message
-            : "An error occurred while fetch the the stream.",
+            : "An error occurred while fetch the the subject.",
       });
     }
   }, [stream]);
@@ -96,11 +100,11 @@ export default function TopicCreatePage() {
     formData.append("topic", topic);
     formData.append("subject", subject);
     formData.append("stream", stream);
-    if (!topic.trim()) {
+    if (!subject.trim()) {
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: "Topic name is required.",
+        description: "Subject name is required.",
       });
       return;
     }
@@ -127,7 +131,6 @@ export default function TopicCreatePage() {
         `${process.env.NEXT_PUBLIC_API}/topic`,
         formData
       );
-
       if (response.status === 201) {
         setVideoLinks([]);
         setUploadedPdf([]);
@@ -135,12 +138,11 @@ export default function TopicCreatePage() {
         setSubjects([]);
         setDescription("");
         setStream("");
-        setTopic("");
         setSubject("");
         toaster.create({
           type: "success",
           title: "Success!",
-          description: "Topic created successfully.",
+          description: "Subject created successfully.",
         });
       }
     } catch (error: unknown) {
@@ -148,11 +150,11 @@ export default function TopicCreatePage() {
       const resErr =
         axiosError.response?.data?.error ||
         axiosError.message ||
-        "An error occurred while creating the topic.";
+        "An error occurred while creating the subject.";
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: resErr || "An error occurred while creating the topic.",
+        description: resErr || "An error occurred while creating the subject.",
       });
     }
   };
@@ -171,18 +173,24 @@ export default function TopicCreatePage() {
           helperText="Fill in the details below to create a new topic."
         />
         <Fieldset.Content>
-          <FormInput value={topic} label="Topic" onChange={(e) => setTopic(e.target.value)} />
+          <FormInput
+            value={topic}
+            label="Topic"
+            onChange={(e) => setTopic(e.target.value)}
+          />
           <FormTextArea
             value={description}
             label="topic"
             onChange={(e) => setDescription(e.target.value)}
           />
-          <FormSelect
-            onChange={(newTags) => setStream(newTags[0])}
-            items={streams}
-            label="stream"
-          />
-          {stream && subjects[0] && (
+          {streams[0] && (
+            <FormSelect
+              onChange={(newTags) => setStream(newTags[0])}
+              items={streams}
+              label="stream"
+            />
+          )}
+          {streams[0] && subjects[0] && (
             <FormSelect
               onChange={(newTags) => setSubject(newTags[0])}
               items={subjects}
@@ -215,8 +223,8 @@ export default function TopicCreatePage() {
           />
         </Fieldset.Content>
         <ButtonWithBackLink
-          disabled={[stream, subject, topic].some((v) => !v.trim())}
-          label="Create Subject"
+          disabled={[topic, stream, subject].some((v) => !v.trim())}
+          label="Create Topic"
           link="/dashboard"
           onClick={handleCreate}
           helperText={"Don't need to create? "}
