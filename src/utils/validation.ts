@@ -193,12 +193,14 @@ export const payloadValidationForCategoryUpdation = async ({
     payload[category] = categoryName;
     isUpdateContentAvailable = true;
   }
-  if (category === 'subject') {
+  if (category === 'subject' && stream) {
     payload["stream"] = convertStringToOjbecId(stream);
+    isUpdateContentAvailable = true;
   }
-    if (category === 'topic') {
+    if (category === 'topic' && stream && subject) {
     payload["stream"] = convertStringToOjbecId(stream);
     payload["subject"] = convertStringToOjbecId(subject);
+    isUpdateContentAvailable = true;
   }
   let search = {};
   let categoryErrMsg = "";

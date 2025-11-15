@@ -1,8 +1,4 @@
-import {
-  Select,
-  createListCollection,
-  Portal,
-} from "@chakra-ui/react";
+import { Select, createListCollection, Portal } from "@chakra-ui/react";
 import { Types } from "mongoose";
 
 interface Dto {
@@ -13,10 +9,14 @@ interface Dto {
 const FormSelect = ({
   label,
   items,
+  defaultValue,
+  disabled = false,
   onChange,
 }: {
   label: string;
   items: Dto[];
+  disabled?: boolean;
+  defaultValue?: string;
   onChange: (value: string[]) => void;
 }) => {
   const list = createListCollection({
@@ -25,23 +25,23 @@ const FormSelect = ({
       value: String(item._id),
     })),
   });
-
   return (
     <Select.Root
+      disabled={disabled}
       collection={list}
+      defaultValue={[String(defaultValue)]}
       size="sm"
       width="full"
       onValueChange={(details) => onChange(details.value)}
     >
-        <Select.HiddenSelect />
+      <Select.HiddenSelect />
       <Select.Label>Select {label}</Select.Label>
-
       <Select.Control>
         <Select.Trigger>
           <Select.ValueText placeholder={`Select ${label}`} />
         </Select.Trigger>
         <Select.IndicatorGroup>
-        <Select.Indicator />
+          <Select.Indicator />
         </Select.IndicatorGroup>
       </Select.Control>
 

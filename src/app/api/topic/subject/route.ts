@@ -1,5 +1,5 @@
 import { connectDB } from "@/src/lib/database";
-import { Subject } from "@/src/models/subject";
+import { Topic } from "@/src/models/topic";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -15,7 +15,7 @@ export async function GET(request: Request) {
         { status: 400 }
       );
     }    
-    const streamData = await Subject.find({stream: id});    
+    const streamData = await Topic.find({subject: id});    
     if (!streamData) {
       return NextResponse.json({ error: "Stream not found" }, { status: 404 });
     }
