@@ -1,7 +1,6 @@
 "use client";
 
 import { Fieldset, Stack, Heading, SimpleGrid } from "@chakra-ui/react";
-import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import "../../../style.css";
 import axios, { AxiosError } from "axios";
@@ -20,17 +19,9 @@ import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormPopover from "@/src/components/shared/molecular/FormPopover";
 import BackwardLink from "@/src/components/shared/atomic/BackwardLink";
+import { Subject } from "@/src/utils/interface";
 
 export default function StreamViewPage() {
-  type Subject = {
-    _id: string;
-    stream: string;
-    subject: string;
-    description: string;
-    videoContent: string[];
-    imageContent: string[];
-    pdfContent: string[];
-  };
 
   const [stream, setStream] = useState("");
   const [subject, setSubject] = useState<Subject[]>([]);

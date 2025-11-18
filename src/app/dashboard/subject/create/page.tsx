@@ -11,21 +11,12 @@ import FormTags from "@/src/components/shared/atomic/FormTags";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import ButtonWithBackLink from "@/src/components/shared/atomic/ButtonWithBackLink";
-import { Types } from "mongoose";
 import FormSelect from "@/src/components/shared/atomic/FormSelect";
+import { CategoryDto, StreamDto } from "@/src/utils/interface";
 
 export default function SubjectCreatePage() {
-  interface StreamDto {
-    _id: string | Types.ObjectId;
-    stream: string;
-  }
-  interface Dto {
-    _id: string | Types.ObjectId;
-    data: string;
-  }
-
   const [stream, setStream] = useState<string>("");
-  const [streams, setStreams] = useState<Dto[]>([]);
+  const [streams, setStreams] = useState<CategoryDto[]>([]);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [uploadedImg, setUploadedImg] = useState<File[]>([]);

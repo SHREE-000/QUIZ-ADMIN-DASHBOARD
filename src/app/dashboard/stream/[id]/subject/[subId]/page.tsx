@@ -1,7 +1,6 @@
 "use client";
 
 import { Fieldset, Stack, Heading, SimpleGrid } from "@chakra-ui/react";
-import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { useParams, useRouter } from "next/navigation";
@@ -18,32 +17,14 @@ import FormRemovePdf from "@/src/components/shared/molecular/FormRemovePdf";
 import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormPopover from "@/src/components/shared/molecular/FormPopover";
-import { Types } from "mongoose";
 import FormSelect from "@/src/components/shared/atomic/FormSelect";
 import BackwardLink from "@/src/components/shared/atomic/BackwardLink";
+import { CategoryDto, StreamDto, Topic } from "@/src/utils/interface";
 
 export default function StreamViewPage() {
-  type Topic = {
-    _id: string;
-    topic: string;
-    subject: string;
-    stream: string;
-    description: string;
-    videoContent: string[];
-    imageContent: string[];
-    pdfContent: string[];
-  };
-  interface StreamDto {
-    _id: string | Types.ObjectId;
-    stream: string;
-  }
-  interface Dto {
-    _id: string | Types.ObjectId;
-    data: string;
-  }
   const [subject, setSubject] = useState("");
   const [topic, setTopic] = useState<Topic[]>([]);
-  const [streams, setStreams] = useState<Dto[]>([]);
+  const [streams, setStreams] = useState<CategoryDto[]>([]);
   const [stream, setStream] = useState("");
   const [updatedSubject, setUpdatedSubject] = useState("");
   const [description, setDescription] = useState("");

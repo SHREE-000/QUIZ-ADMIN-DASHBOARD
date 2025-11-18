@@ -43,3 +43,23 @@ export interface CategoryDto {
   _id: string | Types.ObjectId;
   data: string;
 }
+export interface Subject {
+    _id: string;
+    stream: string;
+    subject: string;
+    description: string;
+    videoContent: string[];
+    imageContent: string[];
+    pdfContent: string[];
+  };
+
+export interface Topic {
+    _id: string;
+    topic: string;
+    subject: string;
+    stream: string;
+    description: string;
+    videoContent: string[];
+    imageContent: string[];
+    pdfContent: string[];
+  };
