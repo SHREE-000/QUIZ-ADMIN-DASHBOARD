@@ -1,48 +1,11 @@
-import mongoose, { Schema, Document, Model } from "mongoose";
+import mongoose, { Schema, Model } from "mongoose";
 import { Topic } from "./topic";
-
-// --------------------
-// Translation Schema
-// --------------------
-export interface ITranslation {
-  qn: string;
-  opt: (string | number)[];
-}
-
-// --------------------
-// QnA Schema
-// --------------------
-export interface IQnA {
-  translations: Map<string, ITranslation>;
-  ans: number;
-  score: number;
-  _id: mongoose.Types.ObjectId;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-}
-
+import { Qn } from "../utils/interface";
 // --------------------
 // Question Schema
 // --------------------
-export interface IQuestion extends Document {
-  type: "SINGLE" | "PASSAGE";
-  topic: mongoose.Types.ObjectId;
-  subject: mongoose.Types.ObjectId;
-  stream: mongoose.Types.ObjectId;
-  qnCount: number;
-  totalScore: number;
-  qna: IQnA | IQnA[];
-  passage: Map<string, string>;
-  exp: Map<string, string>;
-  imageContent?: string[];
-  videoContent?: string[];
-  pdfContent?: string[];
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  tags?: string[];
-  updatedAt: Date;
-  updatedBy: string;
-}
 
-const QuestionSchema = new Schema<IQuestion>(
+const QuestionSchema = new Schema<Qn>(
   {
     type: {
       type: String,
@@ -73,6 +36,6 @@ const QuestionSchema = new Schema<IQuestion>(
 );
 
 // Prevent model overwrite in Next.js hot reload
-export const Question: Model<IQuestion> =
+export const Question: Model<Qn> =
   mongoose.models.Question ||
-  mongoose.model<IQuestion>("Question", QuestionSchema);
+  mongoose.model<Qn>("Question", QuestionSchema);

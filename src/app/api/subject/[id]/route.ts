@@ -25,10 +25,15 @@ export async function GET(
         { status: 400 }
       );
     }
-    const subjectData = await Subject.findById(id).populate({
-      path: "stream",
-      select: "_id stream",
-    });
+    const subjectData = await Subject.findById(id)
+      .populate({
+        path: "stream",
+        select: "_id stream",
+      })
+      .populate({
+        path: "subject",
+        select: "_id subject",
+      });
     if (!subjectData) {
       return NextResponse.json({ error: "Subject not found" }, { status: 404 });
     }
@@ -51,7 +56,7 @@ export async function PUT(
     const { id } = await context.params;
     if (!id || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
-        { error: "Stream ID is required" },
+        { error: "Subject ID is required" },
         { status: 400 }
       );
     }

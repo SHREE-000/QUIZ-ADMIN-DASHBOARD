@@ -3,7 +3,6 @@
 import { Fieldset, Stack, Heading, SimpleGrid } from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import "../../../style.css";
 import axios, { AxiosError } from "axios";
 import { useParams, useRouter } from "next/navigation";
 import { toaster } from "@/src/components/ui/toaster";
@@ -19,24 +18,22 @@ import FormRemovePdf from "@/src/components/shared/molecular/FormRemovePdf";
 import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormPopover from "@/src/components/shared/molecular/FormPopover";
+import FormSelect from "@/src/components/shared/atomic/FormSelect";
+import { CategoryDto, Qn, StreamDto, SubDto } from "@/src/utils/interface";
 import BackwardLink from "@/src/components/shared/atomic/BackwardLink";
 
 export default function StreamViewPage() {
-  type Subject = {
-    _id: string;
-    stream: string;
-    subject: string;
-    description: string;
-    videoContent: string[];
-    imageContent: string[];
-    pdfContent: string[];
-  };
-
+  const [subject, setSubject] = useState("");
+  const [subjects, setSubjects] = useState<CategoryDto[]>([]);
+  const [topic, setTopic] = useState("");
+  const [questions, setQuestions] = useState<Qn[]>([]);
+  const [streams, setStreams] = useState<CategoryDto[]>([]);
   const [stream, setStream] = useState("");
-  const [subject, setSubject] = useState<Subject[]>([]);
-  const [updatedStream, setUpdatedStream] = useState("");
+  const [updatedSubject, setUpdatedSubject] = useState("");
+  const [updatedTopic, setUpdatedTopic] = useState("");
   const [description, setDescription] = useState("");
   const [updatedDescription, setUpdatedDescription] = useState("");
+  const [updatedStream, setUpdatedStream] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
   const [img, setImg] = useState<string[]>([]);
   const [pdf, setPdf] = useState<string[]>([]);
@@ -48,34 +45,21 @@ export default function StreamViewPage() {
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const ref = useRef<HTMLButtonElement | null>(null);
-
   const params = useParams();
   const router = useRouter();
-  const { id } = params;
+  const { id, subId, topicId } = params;
 
   useEffect(() => {
-    const fetchSubjectByStream = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/subject/stream?id=${id}`
-      );
-      const data = response.data;
-      setSubject(data);
-    };
     const fetchStream = async () => {
-      const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API}/stream/${id}`
-      );
+      const response = await axios.get(`${process.env.NEXT_PUBLIC_API}/stream`);
       const data = response.data;
-      setStream(data.stream);
-      setDescription(data.description || "");
-      setRemovedVideoLinks(data.videoContent || []);
-      setVideoLinks(data.videoContent || []);
-      setImg(data.imageContent);
-      setPdf(data.pdfContent);
+      const streamData = data.flatMap((stream: StreamDto) => [
+        { _id: stream._id, data: stream.stream },
+      ]);
+      setStreams(streamData);
     };
     try {
       fetchStream();
-      fetchSubjectByStream();
     } catch (error: unknown) {
       toaster.create({
         type: "error",
@@ -86,7 +70,69 @@ export default function StreamViewPage() {
             : "An error occurred while fetch the the stream.",
       });
     }
-  }, [id]);
+  }, []);
+
+  useEffect(() => {
+    const fetchSubject = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/subject/stream?id=${stream}`
+      );
+      const data = response.data;
+      const subjectData = data.flatMap((subject: SubDto) => [
+        { _id: subject._id, data: subject.subject },
+      ]);
+      setSubjects(subjectData);
+    };
+    try {
+      if (stream) fetchSubject();
+    } catch (error: unknown) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetch the the subject.",
+      });
+    }
+  }, [stream]);
+
+  useEffect(() => {
+    const fetchQnByTopic = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/question/topic?id=${topicId}`
+      );
+      const data = response.data;
+      setQuestions(data);
+    };
+    const fetchTopic = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/topic/${topicId}`
+      );
+      const data = response.data;
+      setTopic(data.topic);
+      setStream(data.stream._id);
+      setSubject(data.subject._id);
+      setDescription(data.description || "");
+      setRemovedVideoLinks(data.videoContent || []);
+      setVideoLinks(data.videoContent || []);
+      setImg(data.imageContent);
+      setPdf(data.pdfContent);
+    };
+    try {
+      fetchTopic();
+      fetchQnByTopic();
+    } catch (error: unknown) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetch the the subject.",
+      });
+    }
+  }, [topicId]);
 
   const handleChangeImg = (files: FileList | null) => {
     setUploadedImg(Array.from(files ?? []));
@@ -108,16 +154,28 @@ export default function StreamViewPage() {
 
   const handleUpdate = async () => {
     const formData = new FormData();
-    formData.append("updatedStream", updatedStream);
-    if (!stream.trim()) {
+    formData.append("updatedTopic", updatedTopic);
+    if (!topic.trim()) {
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: "Stream name is required.",
+        description: "Topic name is required.",
       });
       return;
     }
+    if (!String(id) || !String(subId) || !String(topicId)) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description: "Stream id, Subject id and Topic id is required.",
+      });
+      return;
+    }
+    formData.append("existingStream", String(id));
+    formData.append("existingSubject", String(subId));
     formData.append("updatedDescription", updatedDescription);
+    formData.append("updatedStream", updatedStream);
+    formData.append("updatedSubject", updatedSubject);
     formData.append("newVideo", newVideoLinks.join(","));
     formData.append("removedImg", removedImg.join(","));
     formData.append("removedPdf", removedPdf.join(","));
@@ -141,18 +199,19 @@ export default function StreamViewPage() {
     });
     try {
       const response = await axios.put(
-        `${process.env.NEXT_PUBLIC_API}/stream/${id}`,
+        `${process.env.NEXT_PUBLIC_API}/topic/${topicId}`,
         formData
       );
 
-      if (response.status === 201) {
+      if (response.status === 200) {
         toaster.create({
           type: "success",
           title: "Success!",
-          description: "Stream updated successfully.",
+          description: "Topic updated successfully.",
         });
-        setUpdatedStream("");
+        setUpdatedSubject("");
         setUpdatedDescription("");
+        setUpdatedStream("");
         setNewVideoLinks([]);
         setRemovedImg([]);
         setRemovedPdf([]);
@@ -161,7 +220,7 @@ export default function StreamViewPage() {
         toaster.create({
           type: "error",
           title: "Failed!",
-          description: "An error occurred while updating the stream.",
+          description: "An error occurred while updating the topic.",
         });
       }
       router.replace("");
@@ -170,11 +229,11 @@ export default function StreamViewPage() {
       const resErr =
         axiosError.response?.data?.error ||
         axiosError.message ||
-        "An error occurred while updating the stream.";
+        "An error occurred while updating the topic.";
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: resErr || "An error occurred while updating the stream.",
+        description: resErr || "An error occurred while updating the subject.",
       });
     }
   };
@@ -189,8 +248,8 @@ export default function StreamViewPage() {
         <Fieldset.Root size="lg" maxW="md">
           <Stack direction="row" justifyContent="space-between" gap={2}>
             <FormHeader
-              legend="View and Edit Stream"
-              helperText="Fill in the details below to edit the stream."
+              legend="View and Edit Subject"
+              helperText="Fill in the details below to edit the subject."
             />
             <ConditionEdit
               content="edit mode"
@@ -200,19 +259,19 @@ export default function StreamViewPage() {
           </Stack>
           <Fieldset.Content>
             <FormInput
-              value={stream}
+              value={topic}
               disabled={!isEditMode}
-              label="Stream"
+              label="Topic"
               onChange={(e) => {
-                setStream(e.target.value);
-                setUpdatedStream(() => {
-                  if (stream !== e.target.value) return e.target.value;
+                setTopic(e.target.value);
+                setUpdatedTopic(() => {
+                  if (topic !== e.target.value) return e.target.value;
                   return "";
                 });
               }}
             />
             <FormTextArea
-              label="Stream"
+              label="Topic"
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
@@ -223,6 +282,36 @@ export default function StreamViewPage() {
               }}
               disabled={!isEditMode}
             />
+            {stream && streams[0] && (
+              <FormSelect
+                disabled={!isEditMode}
+                onChange={(newTags) => {
+                  setStream(newTags[0]);
+                  setUpdatedStream(() => {
+                    if (stream !== newTags[0]) return newTags[0];
+                    return "";
+                  });
+                }}
+                items={streams}
+                defaultValue={stream}
+                label="stream"
+              />
+            )}
+            {subject && subjects[0] && (
+              <FormSelect
+                disabled={!isEditMode}
+                onChange={(newTags) => {
+                  setSubject(newTags[0]);
+                  setUpdatedSubject(() => {
+                    if (stream !== newTags[0]) return newTags[0];
+                    return "";
+                  });
+                }}
+                items={streams}
+                defaultValue={stream}
+                label="stream"
+              />
+            )}
             <FormRemoveTag
               isEditMode={isEditMode}
               values={videoLinks}
@@ -279,7 +368,7 @@ export default function StreamViewPage() {
           </Fieldset.Content>
           <FormPopover
             isEditMode={isEditMode}
-            label="Edit Stream"
+            label="Edit Subject"
             content="Are you sure you want to edit?"
             resolve="Edit"
             reject="Cancel"
@@ -288,21 +377,22 @@ export default function StreamViewPage() {
             }}
           />
           <BackwardLink
-            label="Don't need to create stream?"
+            label="Don't need to create topic?"
             link="/dashboard"
             linkText="Back to Dashboard"
           />
         </Fieldset.Root>
       </Stack>
-      <Stack align="center" p={4} gap={6}>
-        <Heading>Subjects Under the {stream} stream</Heading>
+      {/* <Stack align="center" p={4} gap={6}>
+        <Heading>Topics Under the {subject} subject</Heading>
         <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
-          {subject.map(
+          {questions.map(
             (
               data: {
                 _id: string;
                 stream: string;
                 subject: string;
+                topic: string;
                 description: string;
                 videoContent: string[];
                 imageContent: string[];
@@ -312,14 +402,14 @@ export default function StreamViewPage() {
             ) => (
               <CustomCard
                 data={data}
-                category={"subject"}
+                category={"topic"}
                 idx={idx}
                 key={data._id}
               />
             )
           )}
         </SimpleGrid>
-      </Stack>
+      </Stack> */}
     </Stack>
   );
 }

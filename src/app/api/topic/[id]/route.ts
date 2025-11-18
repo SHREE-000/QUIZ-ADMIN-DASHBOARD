@@ -2,7 +2,8 @@ import { connectDB } from "@/src/lib/database";
 import { deleteFiles } from "@/src/lib/s3";
 import { Stream } from "@/src/models/stream";
 import { Subject } from "@/src/models/subject";
-import { STREAM_CATEGORY, STREAM_S3_PATH } from "@/src/utils/constant";
+import { Topic } from "@/src/models/topic";
+import { STREAM_S3_PATH, TOPIC_CATEGORY } from "@/src/utils/constant";
 import {
   mongoUpdateErrorValidation,
   validateObjectId,
@@ -24,7 +25,7 @@ export async function GET(
         { status: 400 }
       );
     }
-    const subjectData = await Subject.findById(id);
+    const subjectData = await Topic.findById(id);
     if (!subjectData) {
       return NextResponse.json({ error: "Subject not found" }, { status: 404 });
     }
@@ -47,19 +48,24 @@ export async function PUT(
     const { id } = await context.params;
     if (!id || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
-        { error: "Stream ID is required" },
+        { error: "Topic ID is required" },
         { status: 400 }
       );
     }
-    const subjectData = await Subject.findById(id);
-    if (!subjectData) {
-      return NextResponse.json({ error: "Stream not found" }, { status: 404 });
+    const topicData = await Topic.findById(id);
+    if (!topicData) {
+      return NextResponse.json(
+        { error: "Topic is not found" },
+        { status: 404 }
+      );
     }
     const body = await request.formData();
     const {
       pdf,
       img,
       updatedDescription,
+      updatedTopic,
+      existingSubject,
       newVideo,
       updatedSubject,
       updatedStream,
@@ -77,30 +83,44 @@ export async function PUT(
       updatedStream: body.get("updatedStream"),
       existingStream: body.get("existingStream"),
       updatedSubject: body.get("updatedSubject"),
+      existingSubject: body.get("existingSubject"),
+      updatedTopic: body.get("updatedTopic"),
       updatedDescription: body.get("updatedDescription"),
     };
+    const trimmedUpdatedTopic = updatedTopic?.toString()?.trim() || "";
     const trimmedUpdatedSubject = updatedSubject?.toString()?.trim() || "";
     const trimmedUpdatedStream = updatedStream?.toString()?.trim() || "";
     const trimmedExistingStream = existingStream?.toString()?.trim() || "";
-    if (!validateObjectId(trimmedExistingStream))
+    const trimmedExistingSubject = existingSubject?.toString()?.trim() || "";
+    const finalStream = trimmedUpdatedStream
+      ? trimmedUpdatedStream
+      : trimmedExistingStream;
+    const finalSubject = trimmedUpdatedSubject
+      ? trimmedUpdatedSubject
+      : trimmedExistingSubject;
+    if (!validateObjectId(finalStream))
       return NextResponse.json(
-        { error: "Existing Stream is not object Id" },
+        { error: "Stream is not object Id" },
         { status: 400 }
       );
-    if (trimmedUpdatedStream) {
-      if (!validateObjectId(trimmedUpdatedStream))
-        return NextResponse.json(
-          { error: "Updated Stream is not object Id" },
-          { status: 400 }
-        );
-      const isStream = Stream.findById(trimmedUpdatedStream);
-      if (!isStream)
-        return NextResponse.json(
-          { error: "No Stream is found" },
-          { status: 400 }
-        );
-    }
-    const s3SubjectURL = `${STREAM_S3_PATH}/${trimmedExistingStream}/subject/${id}`;
+    const isStream = Stream.findById(finalStream);
+    if (!isStream)
+      return NextResponse.json(
+        { error: "No Stream is found" },
+        { status: 400 }
+      );
+    if (!validateObjectId(finalSubject))
+      return NextResponse.json(
+        { error: "Subject is not object Id" },
+        { status: 400 }
+      );
+    const isSubject = Subject.findById(finalSubject);
+    if (!isSubject)
+      return NextResponse.json(
+        { error: "No Subject is found" },
+        { status: 400 }
+      );
+    const s3SubjectURL = `${STREAM_S3_PATH}/${finalStream}/subject/${finalSubject}/topic/${id}`;
     // convert FormDataEntryValue[] to File[] by filtering File instances
     const pdfFiles = (pdf as FormDataEntryValue[]).filter(
       (p): p is File => p instanceof File
@@ -121,12 +141,13 @@ export async function PUT(
     const trimmedVideo = removedVideo?.toString()?.trim();
     const finalRemovedVideo = trimmedVideo ? trimmedVideo.split(",") : [];
     const payload = await payloadValidationForCategoryUpdation({
-      category: STREAM_CATEGORY,
+      category: TOPIC_CATEGORY,
       url: s3SubjectURL,
       dto: {
         stream: trimmedUpdatedStream,
+        subject: trimmedUpdatedSubject,
         category: id,
-        categoryName: trimmedUpdatedSubject,
+        categoryName: trimmedUpdatedTopic,
         pdf: pdfFiles,
         img: imgFiles,
         description: updatedDescription?.toString().trim() || "",
@@ -137,7 +158,7 @@ export async function PUT(
       },
     });
     const { search, payload: input } = payload;
-    const response = await Subject.updateOne(search, input);
+    const response = await Topic.updateOne(search, input);
     mongoUpdateErrorValidation(response);
 
     // placing s3 insertion after DB insertion because ensure transaction
@@ -147,7 +168,7 @@ export async function PUT(
     if (finalRemovedPdf.length > 0) {
       await deleteFiles(finalRemovedPdf);
     }
-    return NextResponse.json(payload, { status: 201 });
+    return NextResponse.json(payload, { status: 200 });
   } catch (error: unknown) {
     console.error("Registration error:", error);
     return NextResponse.json(

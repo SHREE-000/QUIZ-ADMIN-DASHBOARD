@@ -20,6 +20,7 @@ import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormPopover from "@/src/components/shared/molecular/FormPopover";
 import { Types } from "mongoose";
 import FormSelect from "@/src/components/shared/atomic/FormSelect";
+import BackwardLink from "@/src/components/shared/atomic/BackwardLink";
 
 export default function StreamViewPage() {
   type Topic = {
@@ -152,11 +153,11 @@ export default function StreamViewPage() {
       });
       return;
     }
-    if (!String(id)) {
+    if (!String(id) || !String(subId)) {
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: "Stream id is required.",
+        description: "Stream id and Subject id is required.",
       });
       return;
     }
@@ -348,16 +349,15 @@ export default function StreamViewPage() {
               handleUpdate();
             }}
           />
-          <Fieldset.HelperText>
-            Don&apos;t need an account?{" "}
-            <Link href="/dashboard" className="link">
-              Back to Dashboard
-            </Link>
-          </Fieldset.HelperText>
+          <BackwardLink
+            label="Don't need to create subject?"
+            link="/dashboard"
+            linkText="Back to Dashboard"
+          />
         </Fieldset.Root>
       </Stack>
       <Stack align="center" p={4} gap={6}>
-        <Heading>Topics Under the {subject}</Heading>
+        <Heading>Topics Under the {subject} subject</Heading>
         <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
           {topic.map(
             (
@@ -375,7 +375,7 @@ export default function StreamViewPage() {
             ) => (
               <CustomCard
                 data={data}
-                category={"subject"}
+                category={"topic"}
                 idx={idx}
                 key={data._id}
               />
