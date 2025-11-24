@@ -18,7 +18,7 @@ import FormRemovePdf from "@/src/components/shared/molecular/FormRemovePdf";
 import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormPopover from "@/src/components/shared/molecular/FormPopover";
-import FormSelect from "@/src/components/shared/atomic/FormSelect";
+import FormSelect from "@/src/components/shared/molecular/FormSelect";
 import { CategoryDto, Qn, StreamDto, SubDto } from "@/src/utils/interface";
 import BackwardLink from "@/src/components/shared/atomic/BackwardLink";
 

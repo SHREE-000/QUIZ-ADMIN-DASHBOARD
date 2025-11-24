@@ -1,6 +1,6 @@
 "use client";
 
-import { Fieldset, Stack } from "@chakra-ui/react";
+import { Button, Fieldset, Stack } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { toaster } from "@/src/components/ui/toaster";
@@ -12,16 +12,37 @@ import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
 import FormUploadPdf from "@/src/components/shared/molecular/FormUploadPdf";
 import ButtonWithBackLink from "@/src/components/shared/atomic/ButtonWithBackLink";
 import FormSelect from "@/src/components/shared/molecular/FormSelect";
-import { CategoryDto, StreamDto } from "@/src/utils/interface";
+import {
+  CategoryDto,
+  QnA,
+  QnOpt,
+  StreamDto,
+  SubDto,
+  TopicDto,
+} from "@/src/utils/interface";
+import FormRadio from "@/src/components/shared/atomic/FormRadio";
+import AddManualQn from "@/src/components/dashboard/AddManualQn";
 
 export default function SubjectCreatePage() {
-  const [stream, setStream] = useState<string>("");
-  const [streams, setStreams] = useState<CategoryDto[]>([]);
+  const [topic, setTopic] = useState("");
+  const [stream, setStream] = useState("");
   const [subject, setSubject] = useState("");
+  const [streams, setStreams] = useState<CategoryDto[]>([]);
+  const [subjects, setSubjects] = useState<CategoryDto[]>([]);
+  const [topics, setTopics] = useState<CategoryDto[]>([]);
   const [description, setDescription] = useState("");
   const [uploadedImg, setUploadedImg] = useState<File[]>([]);
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
+  const [mode, setMode] = useState<"manual" | "ai">("manual");
+  const [type, setType] = useState("");
+  const [difficulty, setDifficulty] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+  const [passage, setPassage] = useState<Record<string, string>>({});
+  const [explanation, setExplanation] = useState<Record<string, string>>({});
+  // const [qn, seQn] = 
+  const [questions, setQuestions] = useState<QnA[]>([{ ans: -1, score: -1, difficulty: "easy", translations: new Map<string, QnOpt>() }]);
+  console.log(questions, "questions");
 
   useEffect(() => {
     const fetchStream = async () => {
@@ -46,6 +67,71 @@ export default function SubjectCreatePage() {
     }
   }, []);
 
+  useEffect(() => {
+    const fetchSubject = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/subject/stream?id=${stream}`
+      );
+      const data = response.data;
+      const streamData = data.flatMap((subject: SubDto) => [
+        { _id: subject._id, data: subject.subject },
+      ]);
+      setSubjects(streamData);
+    };
+    try {
+      if (stream) fetchSubject();
+    } catch (error: unknown) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetch the the subject.",
+      });
+    }
+  }, [stream]);
+
+  useEffect(() => {
+    const fetchTopic = async () => {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API}/topic/subject?id=${subject}`
+      );
+      const data = response.data;
+      const topicData = data.flatMap((topic: TopicDto) => [
+        { _id: topic._id, data: topic.topic },
+      ]);
+      setTopics(topicData);
+    };
+    try {
+      if (subject) fetchTopic();
+    } catch (error: unknown) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description:
+          error instanceof Error
+            ? error.message
+            : "An error occurred while fetch the the topic.",
+      });
+    }
+  }, [subject]);
+
+  const addQn = () => {
+    setQuestions((prev) => [...prev, { ans: -1, score: -1, difficulty: "easy", translations: new Map<string, QnOpt>() }]);
+  };
+
+  const updateQn = (index: number, field: string, value: number | string | Map<string, QnOpt>) => {
+    setQuestions((prev) => {
+      const updated = [...prev];
+      updated[index] = {
+        ...updated[index],
+        [field]: value,
+      };
+      return updated;
+    });
+  };
+
   const handleChangeImg = (files: FileList | null) => {
     setUploadedImg(Array.from(files ?? []));
   };
@@ -57,6 +143,7 @@ export default function SubjectCreatePage() {
   const handleCreate = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     const formData = new FormData();
+    formData.append("topic", topic);
     formData.append("subject", subject);
     formData.append("stream", stream);
     if (!subject.trim()) {
@@ -87,14 +174,14 @@ export default function SubjectCreatePage() {
     });
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/subject`,
+        `${process.env.NEXT_PUBLIC_API}/topic`,
         formData
       );
-
       if (response.status === 201) {
         setVideoLinks([]);
         setUploadedPdf([]);
         setUploadedImg([]);
+        setSubjects([]);
         setDescription("");
         setStream("");
         setSubject("");
@@ -128,25 +215,34 @@ export default function SubjectCreatePage() {
     >
       <Fieldset.Root size="lg" maxW="md">
         <FormHeader
-          legend="Create a New Subject"
-          helperText="Fill in the details below to create a new subject."
+          legend="Create a New Question"
+          helperText="Fill in the details below to create a new question."
         />
         <Fieldset.Content>
-          <FormInput
-            value={subject}
-            label="Subject"
-            onChange={(e) => setSubject(e.target.value)}
-          />
           <FormTextArea
             value={description}
-            label="subject"
+            label="topic"
             onChange={(e) => setDescription(e.target.value)}
           />
           {streams[0] && (
             <FormSelect
-              onChange={(newTags) => setStream(newTags[0])}
+              onChange={(newTags: string[]) => setStream(newTags[0])}
               items={streams}
               label="stream"
+            />
+          )}
+          {streams[0] && subjects[0] && (
+            <FormSelect
+              onChange={(newTags: string[]) => setSubject(newTags[0])}
+              items={subjects}
+              label="subject"
+            />
+          )}
+          {streams[0] && subjects[0] && topics[0] && (
+            <FormSelect
+              onChange={(newTags: string[]) => setTopic(newTags[0])}
+              items={topics}
+              label="topic"
             />
           )}
           <FormTags
@@ -173,10 +269,35 @@ export default function SubjectCreatePage() {
               handleChangePdf(input?.files ?? null);
             }}
           />
+          <FormRadio onChange={(value) => setMode(value)} />
+          {mode === "manual" ? (
+            <AddManualQn
+              changeDifficult={(newTags) => setDifficulty(newTags[0])}
+              changeType={(newTags) => setType(newTags[0])}
+              changeTag={(tags) => setTags(tags)}
+              changePassage={(lang: string, value: string) => {
+                setPassage((prev) => ({
+                  ...prev,
+                  [lang]: value,
+                }));
+              }}
+              changeExplanation={(lang: string, value: string) => {
+                setExplanation((prev) => ({
+                  ...prev,
+                  [lang]: value,
+                }));
+              }}
+              questions={questions}
+              addQn={addQn}
+              updateQn={updateQn}
+            />
+          ) : (
+            <>haa{mode}</>
+          )}
         </Fieldset.Content>
         <ButtonWithBackLink
-          disabled={[stream, subject].some((v) => !v.trim())}
-          label="Create Subject"
+          disabled={[topic, stream, subject].some((v) => !v.trim())}
+          label="Create Question"
           link="/dashboard"
           onClick={handleCreate}
           helperText={"Don't need to create? "}

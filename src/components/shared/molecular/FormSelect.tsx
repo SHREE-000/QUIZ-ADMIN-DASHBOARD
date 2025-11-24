@@ -1,10 +1,5 @@
+import { CategoryDto } from "@/src/utils/interface";
 import { Select, createListCollection, Portal } from "@chakra-ui/react";
-import { Types } from "mongoose";
-
-interface Dto {
-  _id: string | Types.ObjectId;
-  data: string;
-}
 
 const FormSelect = ({
   label,
@@ -12,12 +7,20 @@ const FormSelect = ({
   defaultValue,
   disabled = false,
   onChange,
+  type = "default",
+  index,
+  field,
 }: {
   label: string;
-  items: Dto[];
+  items: CategoryDto[];
   disabled?: boolean;
   defaultValue?: string;
-  onChange: (value: string[]) => void;
+  type?: "default" | "custom";
+  field?: "difficulty";
+  onChange:
+    | ((value: string[]) => void)
+    | ((index: number, field: string, value: string) => void);
+  index?: number;
 }) => {
   const list = createListCollection({
     items: items.map((item) => ({
@@ -25,6 +28,24 @@ const FormSelect = ({
       value: String(item._id),
     })),
   });
+  type DefaultChange = (details: { value: string[] }) => void;
+  type NumericChange = (details: { value: string[] }) => void;
+  let handleChange: DefaultChange | NumericChange;
+  if (type === "default") {
+    handleChange = (details) => {
+      (onChange as (value: string[]) => void)(details.value);
+    };
+  } else {
+    handleChange = (details: { value: string[] }) => {
+      const idx = index ?? -1;
+      const fieldVal = field ?? "";
+      (onChange as (index: number, field: string, value: string) => void)(
+        idx,
+        fieldVal,
+        details.value[0]
+      );
+    };
+  }
   return (
     <Select.Root
       disabled={disabled}
@@ -32,7 +53,7 @@ const FormSelect = ({
       defaultValue={[String(defaultValue)]}
       size="sm"
       width="full"
-      onValueChange={(details) => onChange(details.value)}
+      onValueChange={handleChange}
     >
       <Select.HiddenSelect />
       <Select.Label>Select {label}</Select.Label>

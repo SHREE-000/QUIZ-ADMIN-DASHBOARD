@@ -25,7 +25,7 @@ const CardWithLink = ({
       <Text mb="3" fontSize="md" color="fg.muted">
         {content}
       </Text>
-      <Stack align="flex-end">
+      <Stack mt="auto" align="flex-end">
         <Link href={link}>
           <Button direction="row">
             {buttonText}

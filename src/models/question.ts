@@ -25,8 +25,8 @@ const QuestionSchema = new Schema<Qn>(
     pdfContent: { type: [String], default: [] },
     difficulty: {
       type: String,
-      enum: ["EASY", "MEDIUM", "HARD"],
-      default: "EASY",
+      enum: ["easy", "medium", "hard"],
+      default: "easy",
     },
     tags: { type: [String], default: [] },
     updatedAt: { type: Date, default: Date.now },

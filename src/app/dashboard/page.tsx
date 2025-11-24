@@ -9,14 +9,8 @@ export default async function DashboardPage() {
   const data = res.data;
 
   return (
-    <Stack align="center" p={4} gap={6}>
-      <SimpleGrid
-        display="flex"
-        alignContent="center"
-        columns={{ base: 1, sm: 2, md: 3, lg: 4 }}
-        gap={6}
-        p={4}
-      >
+    <Stack align="center" justifyContent="center" p={4} gap={6}>
+      <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
         <CardWithLink
           heading="Create New Streams"
           content="Create new streams by clicking below button."
@@ -34,6 +28,12 @@ export default async function DashboardPage() {
           content="Create new topic by clicking below button."
           buttonText="Create Topic"
           link={"/dashboard/topic/create"}
+        />
+        <CardWithLink
+          heading="Create New Question"
+          content="Create new question by clicking below button."
+          buttonText="Create Question"
+          link={"/dashboard/question/create"}
         />
       </SimpleGrid>
       <Heading>STREAMS</Heading>
