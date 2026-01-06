@@ -5,10 +5,11 @@ const FormTextArea = ({
   onChange,
   required = false,
   value,
-  disabled = false
+  disabled = false,
+  type = "Description",
 }: {
   label: string;
-  type?: string;
+  type?: "Description" | "Passage" | "Explanation";
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   required?: boolean;
   value?: string;
@@ -16,13 +17,13 @@ const FormTextArea = ({
 }) => {
   return (
     <Field.Root>
-      <Field.Label>Description</Field.Label>
+      <Field.Label>{type}</Field.Label>
       <Textarea
         value={value}
         disabled={disabled}
         onChange={onChange}
-        name={`${label} description`}
-        placeholder={`Enter ${label} description`}
+        name={`${label} ${type.toLowerCase()}`}
+        placeholder={`Enter ${label} ${type.toLowerCase()}`}
         required={required}
       />
     </Field.Root>

@@ -276,6 +276,21 @@ export const payloadValidationForCategoryUpdation = async ({
   return { payload, search };
 };
 
+export const validateAiQn = (qna: any) => {
+  let qnCount = 0;
+  let totalScore = 0;
+  if (Array.isArray(qna)) {
+    qnCount = qna.length;
+  }
+  if (Array.isArray(qna)) {
+    for (let i = 0; i < qna.length; i++) {
+      const { score } = qna[i];
+      totalScore += score;
+    }
+  }
+  return { qnCount, totalScore };
+};
+
 // export const payloadValidationForCategoryDeletion = async ({ category, dto }) => {
 //   const { description, videoContent, imageContent, pdfContent } = dto;
 //   let img = [];

@@ -7,20 +7,12 @@ const FormSelect = ({
   defaultValue,
   disabled = false,
   onChange,
-  type = "default",
-  index,
-  field,
 }: {
   label: string;
   items: CategoryDto[];
   disabled?: boolean;
   defaultValue?: string;
-  type?: "default" | "custom";
-  field?: "difficulty";
-  onChange:
-    | ((value: string[]) => void)
-    | ((index: number, field: string, value: string) => void);
-  index?: number;
+  onChange:((value: string[]) => void)
 }) => {
   const list = createListCollection({
     items: items.map((item) => ({
@@ -28,24 +20,7 @@ const FormSelect = ({
       value: String(item._id),
     })),
   });
-  type DefaultChange = (details: { value: string[] }) => void;
-  type NumericChange = (details: { value: string[] }) => void;
-  let handleChange: DefaultChange | NumericChange;
-  if (type === "default") {
-    handleChange = (details) => {
-      (onChange as (value: string[]) => void)(details.value);
-    };
-  } else {
-    handleChange = (details: { value: string[] }) => {
-      const idx = index ?? -1;
-      const fieldVal = field ?? "";
-      (onChange as (index: number, field: string, value: string) => void)(
-        idx,
-        fieldVal,
-        details.value[0]
-      );
-    };
-  }
+
   return (
     <Select.Root
       disabled={disabled}
@@ -53,7 +28,7 @@ const FormSelect = ({
       defaultValue={[String(defaultValue)]}
       size="sm"
       width="full"
-      onValueChange={handleChange}
+      onValueChange={(details) => onChange(details.value)}
     >
       <Select.HiddenSelect />
       <Select.Label>Select {label}</Select.Label>

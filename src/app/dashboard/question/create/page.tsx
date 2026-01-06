@@ -38,8 +38,8 @@ export default function SubjectCreatePage() {
   const [type, setType] = useState("");
   const [difficulty, setDifficulty] = useState("");
   const [tags, setTags] = useState<string[]>([]);
-  const [passage, setPassage] = useState<Record<string, string>>({});
-  const [explanation, setExplanation] = useState<Record<string, string>>({});
+  const [passage, setPassage] = useState("");
+  const [explanation, setExplanation] = useState("");
   // const [qn, seQn] = 
   const [questions, setQuestions] = useState<QnA[]>([{ ans: -1, score: -1, difficulty: "easy", translations: new Map<string, QnOpt>() }]);
   console.log(questions, "questions");
@@ -269,24 +269,14 @@ export default function SubjectCreatePage() {
               handleChangePdf(input?.files ?? null);
             }}
           />
+          <FormTags label="Tags" onChange={(newTags) => setTags(newTags)} />
           <FormRadio onChange={(value) => setMode(value)} />
           {mode === "manual" ? (
             <AddManualQn
               changeDifficult={(newTags) => setDifficulty(newTags[0])}
               changeType={(newTags) => setType(newTags[0])}
-              changeTag={(tags) => setTags(tags)}
-              changePassage={(lang: string, value: string) => {
-                setPassage((prev) => ({
-                  ...prev,
-                  [lang]: value,
-                }));
-              }}
-              changeExplanation={(lang: string, value: string) => {
-                setExplanation((prev) => ({
-                  ...prev,
-                  [lang]: value,
-                }));
-              }}
+              changePassage={(e) => setPassage(e.target.value)}
+              changeExplanation={(e) => setExplanation(e.target.value)}
               questions={questions}
               addQn={addQn}
               updateQn={updateQn}
