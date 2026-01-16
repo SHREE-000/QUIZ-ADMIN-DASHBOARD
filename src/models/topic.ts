@@ -26,7 +26,7 @@ export interface ITopic extends Document {
 
 const TopicSchema: Schema<ITopic> = new Schema<ITopic>(
   {
-    topic: { type: String, required: true, index: true },
+    topic: { type: String, required: true},
     subject: { type: Schema.Types.ObjectId, ref: Subject, required: true },
     stream: { type: Schema.Types.ObjectId, ref: Stream, required: true },
     description: { type: String, default: "" },
