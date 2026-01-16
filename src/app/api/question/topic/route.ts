@@ -1,6 +1,5 @@
 import { connectDB } from "@/src/lib/database";
 import { Question } from "@/src/models/question";
-import { Topic } from "@/src/models/topic";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 

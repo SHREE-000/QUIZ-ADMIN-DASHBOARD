@@ -50,3 +50,4 @@ export const LANGUAGES = [
   "assamese",
   "maithili",
 ];
+export const AI_TEXT_QN_FEED = "textQnFeed.jsonl";

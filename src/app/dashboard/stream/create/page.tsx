@@ -140,7 +140,7 @@ export default function StreamCreatePage() {
           />
         </Fieldset.Content>
         <ButtonWithBackLink
-          disabled={stream.trim() ? true : false}
+          disabled={!stream.trim() ? true : false}
           label="Create Stream"
           link="/dashboard"
           onClick={handleCreate}

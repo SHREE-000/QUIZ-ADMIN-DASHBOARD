@@ -1,11 +1,10 @@
 "use client";
 
-import { Button, Fieldset, Stack } from "@chakra-ui/react";
+import { Fieldset, Stack } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import axios, { AxiosError } from "axios";
 import { toaster } from "@/src/components/ui/toaster";
 import FormHeader from "@/src/components/shared/atomic/FormHeader";
-import FormInput from "@/src/components/shared/atomic/FormInput";
 import FormTextArea from "@/src/components/shared/atomic/FormTextArea";
 import FormTags from "@/src/components/shared/atomic/FormTags";
 import FormUploadImg from "@/src/components/shared/molecular/FormUploadImg";
@@ -14,14 +13,12 @@ import ButtonWithBackLink from "@/src/components/shared/atomic/ButtonWithBackLin
 import FormSelect from "@/src/components/shared/molecular/FormSelect";
 import {
   CategoryDto,
-  QnA,
-  QnOpt,
   StreamDto,
   SubDto,
   TopicDto,
 } from "@/src/utils/interface";
-import FormRadio from "@/src/components/shared/atomic/FormRadio";
-import AddManualQn from "@/src/components/dashboard/AddManualQn";
+import { IoAddCircleOutline } from "react-icons/io5";
+import { MdOutlineDelete } from "react-icons/md";
 
 export default function SubjectCreatePage() {
   const [topic, setTopic] = useState("");
@@ -30,19 +27,11 @@ export default function SubjectCreatePage() {
   const [streams, setStreams] = useState<CategoryDto[]>([]);
   const [subjects, setSubjects] = useState<CategoryDto[]>([]);
   const [topics, setTopics] = useState<CategoryDto[]>([]);
-  const [description, setDescription] = useState("");
-  const [uploadedImg, setUploadedImg] = useState<File[]>([]);
-  const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
-  const [videoLinks, setVideoLinks] = useState<string[]>([]);
-  const [mode, setMode] = useState<"manual" | "ai">("manual");
-  const [type, setType] = useState("");
-  const [difficulty, setDifficulty] = useState("");
+  // const [uploadedImg, setUploadedImg] = useState<File[]>([]);
+  // const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
+  // const [videoLinks, setVideoLinks] = useState<string[]>([]);
+  const [qns, setQns] = useState<string[]>([""]);
   const [tags, setTags] = useState<string[]>([]);
-  const [passage, setPassage] = useState("");
-  const [explanation, setExplanation] = useState("");
-  // const [qn, seQn] = 
-  const [questions, setQuestions] = useState<QnA[]>([{ ans: -1, score: -1, difficulty: "easy", translations: new Map<string, QnOpt>() }]);
-  console.log(questions, "questions");
 
   useEffect(() => {
     const fetchStream = async () => {
@@ -117,28 +106,13 @@ export default function SubjectCreatePage() {
     }
   }, [subject]);
 
-  const addQn = () => {
-    setQuestions((prev) => [...prev, { ans: -1, score: -1, difficulty: "easy", translations: new Map<string, QnOpt>() }]);
-  };
+  // const handleChangeImg = (files: FileList | null) => {
+  //   setUploadedImg(Array.from(files ?? []));
+  // };
 
-  const updateQn = (index: number, field: string, value: number | string | Map<string, QnOpt>) => {
-    setQuestions((prev) => {
-      const updated = [...prev];
-      updated[index] = {
-        ...updated[index],
-        [field]: value,
-      };
-      return updated;
-    });
-  };
-
-  const handleChangeImg = (files: FileList | null) => {
-    setUploadedImg(Array.from(files ?? []));
-  };
-
-  const handleChangePdf = (files: FileList | null) => {
-    setUploadedPdf(Array.from(files ?? []));
-  };
+  // const handleChangePdf = (files: FileList | null) => {
+  //   setUploadedPdf(Array.from(files ?? []));
+  // };
 
   const handleCreate = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
@@ -146,43 +120,62 @@ export default function SubjectCreatePage() {
     formData.append("topic", topic);
     formData.append("subject", subject);
     formData.append("stream", stream);
+    formData.append("qns", JSON.stringify(qns));
+    formData.append("tags", JSON.stringify(tags));
+    if (!topic.trim()) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description: "Topic id is required.",
+      });
+      return;
+    }
     if (!subject.trim()) {
       toaster.create({
         type: "error",
         title: "Failed!",
-        description: "Subject name is required.",
+        description: "Subject id is required.",
       });
       return;
     }
-    formData.append("description", description);
-    formData.append("video", videoLinks.join(","));
-    // Filter out duplicates
-    [
-      ...new Map(
-        Array.from(uploadedImg).map((item) => [item.name, item])
-      ).values(),
-    ].forEach((file) => {
-      formData.append("img", file);
-    });
+    if (!stream.trim()) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description: "Stream id is required.",
+      });
+      return;
+    }
+    // formData.append("video", videoLinks.join(","));
+    // // Filter out duplicates
+    // [
+    //   ...new Map(
+    //     Array.from(uploadedImg).map((item) => [item.name, item])
+    //   ).values(),
+    // ].forEach((file) => {
+    //   formData.append("img", file);
+    // });
 
-    [
-      ...new Map(
-        Array.from(uploadedPdf).map((item) => [item.name, item])
-      ).values(),
-    ].forEach((file) => {
-      formData.append("pdf", file);
-    });
+    // [
+    //   ...new Map(
+    //     Array.from(uploadedPdf).map((item) => [item.name, item])
+    //   ).values(),
+    // ].forEach((file) => {
+    //   formData.append("pdf", file);
+    // });
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API}/topic`,
+        `${process.env.NEXT_PUBLIC_API}/question/text`,
         formData
       );
       if (response.status === 201) {
-        setVideoLinks([]);
-        setUploadedPdf([]);
-        setUploadedImg([]);
+        // setVideoLinks([]);
+        // setUploadedPdf([]);
+        // setUploadedImg([]);
         setSubjects([]);
-        setDescription("");
+        setTags([]);
+        setTopics([]);
+        setTopic("");
         setStream("");
         setSubject("");
         toaster.create({
@@ -204,6 +197,36 @@ export default function SubjectCreatePage() {
       });
     }
   };
+  const handleAddQn = () => {
+    setQns((prev) => {
+      const notValidQn = prev.some((qn) => !qn.trim());
+      if (notValidQn) {
+        toaster.create({
+          type: "error",
+          title: "Failed!",
+          description: "Please enter valid question before adding a new one.",
+        });
+        return prev;
+      } else return [...prev, ""];
+    });
+  };
+
+  const handleChangeQn = (index: number, value: string) => {
+    setQns((prev) => prev.map((item, i) => (i === index ? value : item)));
+  };
+
+  const handleDeleteQn = (idx: number) => {
+    const qnLen = qns.length;
+    if (qnLen === 1) {
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description: "At least one question is required.",
+      });
+      return;
+    }
+    setQns((prev) => prev.filter((_, index) => index !== idx));
+  };
 
   return (
     <Stack
@@ -219,11 +242,6 @@ export default function SubjectCreatePage() {
           helperText="Fill in the details below to create a new question."
         />
         <Fieldset.Content>
-          <FormTextArea
-            value={description}
-            label="topic"
-            onChange={(e) => setDescription(e.target.value)}
-          />
           {streams[0] && (
             <FormSelect
               onChange={(newTags: string[]) => setStream(newTags[0])}
@@ -245,7 +263,7 @@ export default function SubjectCreatePage() {
               label="topic"
             />
           )}
-          <FormTags
+          {/* <FormTags
             label="Youtube Video Links"
             onChange={(newTags) => setVideoLinks(newTags)}
           />
@@ -268,22 +286,31 @@ export default function SubjectCreatePage() {
               ) as HTMLInputElement;
               handleChangePdf(input?.files ?? null);
             }}
-          />
+          /> */}
           <FormTags label="Tags" onChange={(newTags) => setTags(newTags)} />
-          <FormRadio onChange={(value) => setMode(value)} />
-          {mode === "manual" ? (
-            <AddManualQn
-              changeDifficult={(newTags) => setDifficulty(newTags[0])}
-              changeType={(newTags) => setType(newTags[0])}
-              changePassage={(e) => setPassage(e.target.value)}
-              changeExplanation={(e) => setExplanation(e.target.value)}
-              questions={questions}
-              addQn={addQn}
-              updateQn={updateQn}
+          {qns.map((value, index) => (
+            <FormTextArea
+              value={value}
+              key={index}
+              type="Question"
+              addOnLabel={index + 1}
+              label="content or"
+              action={
+                <MdOutlineDelete
+                  style={{ cursor: "pointer" }}
+                  onClick={() => handleDeleteQn(index)}
+                />
+              }
+              onChange={(e) => handleChangeQn(index, e.target.value)}
             />
-          ) : (
-            <>haa{mode}</>
-          )}
+          ))}
+          <Stack align="center">
+            <IoAddCircleOutline
+              onClick={handleAddQn}
+              style={{ cursor: "pointer" }}
+              size={32}
+            />
+          </Stack>
         </Fieldset.Content>
         <ButtonWithBackLink
           disabled={[topic, stream, subject].some((v) => !v.trim())}

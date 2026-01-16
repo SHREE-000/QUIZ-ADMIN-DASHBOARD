@@ -1,9 +1,9 @@
-import fs from 'fs';
 import OpenAI from 'openai';
 import { ResponseInput } from 'openai/resources/responses/responses';
-// import { fileExists } from './file';
-import { validateAiQn } from '../utils/validation';
 const openai = new OpenAI();
+import fs from 'fs';
+import { fileExists } from './file';
+import { AI_TEXT_QN_FEED } from '../utils/constant';
 
 const inputTranslate = (content: string): ResponseInput => {
 return [
@@ -47,57 +47,58 @@ export const translate = async (content: string) => {
   return response.output_text;
 };
 
-// export const generateInputForQn = (content: string): ResponseInput => {
-//   return [
-//     {
-//       role: 'system',
-//       content: `JSON-only. Schema:{
-//   "difficulty": string, // "easy" | "medium" | "hard" — based on the provided input question
-//   "passage": {
-//     "english": string,
-//     "hindi": string,
-//     "bengali": string,
-//     "marathi": string,
-//     "telugu": string,
-//     "tamil": string,
-//     "gujarati": string,
-//     "urdu": string,
-//     "kannada": string,
-//     "odia": string,
-//     "malayalam": string,
-//     "panjabi": string,
-//     "assamese": string,
-//     "maithili": string
-//   },
-//   "exp": {
-//     (same languages as passage)
-//   },
-//   "qna": [
-//     {
-//       "translations": {
-//         "english": { "qn": string, "opt": [string, string, string, string] },
-//         "hindi":   { "qn": string, "opt": [string, string, string, string] },
-//         "...":     { ... }  // and so on for all listed languages
-//       },
-//       "difficulty": string,  // "easy", "medium", or "hard" - based on the question generated
-//       "ans": integer,        // index of correct option (0-based)
-//       "score": integer       // 1 for easy, 2 for medium, 3 for hard
-//     }
-//   ]
-// } Steps: 1.Translate → all languages. 2.Create maximum stepwise teaching MCQs from the problem. Split into sub-questions, randomize options, and vary the correct answer index each time. 
-// 3. Set difficulty levels inside each QnA based on the generated question, and outside based on the input question from 10th standard NCERT. Assign score inside each question according to its difficulty: 1 for easy, 2 for medium, 3 for hard.
-// 4. If question coming as input divide qn into multple qns. 
-// 5. Ensure correctness, coherence, and natural translations. 
-// 6. Validate that JSON is syntactically correct and logically consistent. 
-// 7. Exclude image tags and non-text elements, but keep math symbols and equations intact for readability.
-// 8. Output only JSON.`,
-//     },
-//     {
-//       role: 'user',
-//       content: content,
-//     },
-//   ];
-// };
+export const generateInputForQn = (content: string): ResponseInput => {
+  return [
+    {
+      role: 'system',
+      content: `JSON-only. Schema:{
+  "difficulty": string, // "easy" | "medium" | "hard" — based on the provided input question
+  "passage": {
+    "english": string,
+    "hindi": string,
+    "bengali": string,
+    "marathi": string,
+    "telugu": string,
+    "tamil": string,
+    "gujarati": string,
+    "urdu": string,
+    "kannada": string,
+    "odia": string,
+    "malayalam": string,
+    "panjabi": string,
+    "assamese": string,
+    "maithili": string
+  },
+  "exp": {
+    (same languages as passage)
+  },
+  "qna": [
+    {
+      "translations": {
+        "english": { "qn": string, "opt": [string, string, string, string] },
+        "hindi":   { "qn": string, "opt": [string, string, string, string] },
+        "...":     { ... }  // and so on for all listed languages
+      },
+      "difficulty": string,  // "easy", "medium", or "hard" - based on the question generated
+      "ans": integer,        // index of correct option (0-based)
+      "score": integer       // 1 for easy, 2 for medium, 3 for hard
+    }
+  ]
+} Steps: 1.Translate → all languages. 2.Create maximum stepwise teaching MCQs from the problem. Split into sub-questions, randomize options, and vary the correct answer index each time. 
+3. Set difficulty levels inside each QnA based on the generated question, and outside based on the input question from 10th standard NCERT. Assign score inside each question according to its difficulty: 1 for easy, 2 for medium, 3 for hard.
+4. If question coming as input divide qn into multple qns. 
+5. Ensure correctness, coherence, and natural translations. 
+6. Validate that JSON is syntactically correct and logically consistent. 
+7. Exclude image tags and non-text elements, but keep math symbols and equations intact for readability.
+8. Output only JSON.
+9. Create qns for class 5th standard level.`,
+    },
+    {
+      role: 'user',
+      content: content,
+    },
+  ];
+};
 
 // export const getQnFromAI = async (content: string) => {
 //   const response = await openai.responses.create({
@@ -192,24 +193,24 @@ export const translate = async (content: string) => {
 //   }
 // };
 
-// export const qnBatchFeeding = async () => {
-//   const exists = await fileExists('qnFeed.jsonl');
-//   if (!exists) {
-//     throw new Error('Input file does not exist');
-//   }
-//   try {
-//     const file = await openai.files.create({
-//       file: fs.createReadStream('qnFeed.jsonl'),
-//       purpose: 'batch',
-//     });
-//     const batch = await openai.batches.create({
-//       input_file_id: file.id,
-//       endpoint: '/v1/responses',
-//       completion_window: '24h',
-//     });
-//     return batch.id;
-//   } catch (error) {
-//     console.error('Error creating batch:', error);
-//     throw new Error('Batch creation failed');
-//   }
-// };
+export const qnBatchFeeding = async () => {
+  const exists = await fileExists(AI_TEXT_QN_FEED);
+  if (!exists) {
+    throw new Error('Input file does not exist');
+  }
+  try {
+    const file = await openai.files.create({
+      file: fs.createReadStream(AI_TEXT_QN_FEED),
+      purpose: 'batch',
+    });
+    const batch = await openai.batches.create({
+      input_file_id: file.id,
+      endpoint: '/v1/responses',
+      completion_window: '24h',
+    });
+    return batch.id;
+  } catch (error) {
+    console.error('Error creating batch:', error);
+    throw new Error('Batch creation failed');
+  }
+};

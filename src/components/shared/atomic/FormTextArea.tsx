@@ -7,17 +7,21 @@ const FormTextArea = ({
   value,
   disabled = false,
   type = "Description",
+  addOnLabel = "",
+  action,
 }: {
   label: string;
-  type?: "Description" | "Passage" | "Explanation";
+  type?: "Description" | "Passage" | "Explanation" | "Question";
+  addOnLabel?: string | number;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   required?: boolean;
   value?: string;
   disabled?: boolean;
+  action?: React.ReactNode;
 }) => {
   return (
     <Field.Root>
-      <Field.Label>{type}</Field.Label>
+      <Field.Label>{type} {addOnLabel} {action && action}</Field.Label>
       <Textarea
         value={value}
         disabled={disabled}

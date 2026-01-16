@@ -3,20 +3,20 @@ import { HStack, RadioGroup } from "@chakra-ui/react";
 
 const FormRadio = ({
   size = "lg",
-  defaultValue = "manual",
+  defaultValue = "single",
   items = [
-    { label: "manual", value: "manual" },
-    { label: "ai", value: "ai" },
+    { label: "single", value: "single" },
+    { label: "passage", value: "passage" },
   ],
   onChange
 }: {
   size?: "sm" | "md" | "lg";
-  defaultValue?: "manual" | "ai";
+  defaultValue?: "single" | "passage";
   items?: Items[];
-  onChange: (value: "manual" | "ai") => void;   
+  onChange: (value: "single" | "passage") => void;   
 }) => {
   return (
-    <RadioGroup.Root onValueChange={(details) => onChange(details.value as "manual" | "ai")} size={size} key={size} defaultValue={defaultValue}>
+    <RadioGroup.Root onValueChange={(details) => onChange(details.value as "single" | "passage")} size={size} key={size} defaultValue={defaultValue}>
       <HStack gap="6">
         {items.map((item) => (
           <RadioGroup.Item key={item.value} value={item.value}>

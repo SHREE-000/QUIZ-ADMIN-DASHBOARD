@@ -3,6 +3,16 @@ import mongoose, { Schema, Document, Model } from "mongoose";
 import { Subject } from "./subject";
 import { Stream } from "./stream";
 
+interface QnBatchData {
+  batchId: string;
+  qns: string[];
+  tags?: string[];
+  videoContent?: string[];
+  imageContent?: string[];
+  pdfContent?: string[];
+  subject: string | mongoose.Types.ObjectId;
+  stream: string | mongoose.Types.ObjectId;
+}
 export interface ITopic extends Document {
   topic: string;
   subject: mongoose.Types.ObjectId;
@@ -11,6 +21,7 @@ export interface ITopic extends Document {
   videoContent?: string[];
   imageContent?: string[];
   pdfContent?: string[];
+  qnBatchData?: QnBatchData[];
 }
 
 const TopicSchema: Schema<ITopic> = new Schema<ITopic>(
@@ -22,6 +33,7 @@ const TopicSchema: Schema<ITopic> = new Schema<ITopic>(
     videoContent: { type: [String], default: [] },
     imageContent: { type: [String], default: [] },
     pdfContent: { type: [String], default: [] },
+    qnBatchData: {type: [Schema.Types.Mixed], default: [] },
   },
   { timestamps: true }
 );

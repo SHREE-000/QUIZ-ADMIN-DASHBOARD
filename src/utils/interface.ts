@@ -1,4 +1,5 @@
 import mongoose, { Types } from "mongoose";
+import { ResponseInput } from 'openai/resources/responses/responses';
 
 export interface QnOpt {
   qn: string;
@@ -88,3 +89,13 @@ export interface ContentLan {
     "assamese"?: string,
     "maithili"?: string
 }
+
+export interface GptInput {
+    custom_id: string;
+    method: string;
+    url: string;
+    body: {
+      model: string;
+      input: ResponseInput;
+    },
+  }
