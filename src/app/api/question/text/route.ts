@@ -49,17 +49,17 @@ export async function POST(request: Request) {
       );
     }
     if (!qns || qns.length <= 0) throw new Error("no qns");
-    await qnBatching(qns);
-    const batchId = await qnBatchFeeding();
+    // await qnBatching(qns);
+    // const batchId = await qnBatchFeeding();
     const payload = {
-      batchId,
+      batchId : "",
       qns,
       tags,
       subject,
       stream,
     };
     const updateRes = await Topic.updateOne(
-      { topic },
+      { _id: topic },
       { $push: { qnBatchData: payload } }
     );
     const isUpdate = mongoUpdateErrorValidation(updateRes);
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-    return NextResponse.json(payload, { status: 200 });
+    return NextResponse.json(payload, { status: 201 });
   } catch (error: unknown) {
     console.error("Service connection error:", error);
     return NextResponse.json(

@@ -7,7 +7,6 @@ import {
 } from "../../../utils/validation";
 import mongoose from "mongoose";
 import { deleteFiles } from "@/src/lib/s3";
-import { Subject } from "@/src/models/subject";
 import { validateObjectId } from "@/src/utils/general_fun";
 import { Topic } from "@/src/models/topic";
 
@@ -55,7 +54,7 @@ export async function POST(request: Request) {
     const imgFiles = (img as FormDataEntryValue[]).filter(
       (p): p is File => p instanceof File
     );
-    const topic = body.get("stream")?.toString()?.trim() ?? "";
+    const topic = body.get("topic")?.toString()?.trim() ?? "";
     const stream = body.get("stream")?.toString()?.trim() ?? "";
     const subject = body.get("subject")?.toString()?.trim() ?? "";
     const isStream = validateObjectId(stream);
@@ -66,13 +65,6 @@ export async function POST(request: Request) {
           error:
             "Topic, Stream and Subject is required. Stream and Subject need to be valid object id",
         },
-        { status: 400 }
-      );
-    }
-    const isSubjectExists = await Subject.findOne({ _id: subject, stream });
-    if (!isSubjectExists) {
-      return NextResponse.json(
-        { error: "Stream is not exists." },
         { status: 400 }
       );
     }
@@ -106,7 +98,7 @@ export async function POST(request: Request) {
     });
     imageContent = payload.imageContent;
     pdfContent = payload.pdfContent;
-    const doc = new Subject({ ...payload, _id: topicId });
+    const doc = new Topic({ ...payload, _id: topicId });
     const streamDoc = await doc.save();
     return NextResponse.json(streamDoc, { status: 201 });
   } catch (error: unknown) {

@@ -127,7 +127,7 @@ export const validateEmail = (email: string) => {
   return true;
 };
 
-export const mongoUpdateErrorValidation = async (result: MONGO_UPDATEONE) => {
+export const mongoUpdateErrorValidation = (result: MONGO_UPDATEONE) => {
   if (result.modifiedCount === 0) {
     if (result.matchedCount === 1)
       throw new Error("There is no change in the content to edit");

@@ -276,7 +276,7 @@ export const payloadValidationForCategoryUpdation = async ({
   return { payload, search };
 };
 
-export const validateAiQn = (qna: any) => {
+export const validateAiQn = (qna: unknown) => {
   let qnCount = 0;
   let totalScore = 0;
   if (Array.isArray(qna)) {

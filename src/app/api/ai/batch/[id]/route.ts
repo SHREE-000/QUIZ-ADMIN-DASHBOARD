@@ -1,5 +1,7 @@
-import axios from "axios";
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
 
 export async function GET(
   request: Request,
@@ -7,22 +9,22 @@ export async function GET(
 ) {
   try {
     const { id } = await context.params;
-    if (!id || !id.trim()) {
+    const { searchParams } = new URL(request.url);
+    const file = searchParams.get("file") || "";
+    if (!id?.trim() || !file?.trim()) {
       return NextResponse.json(
-        { error: "Batch ID is required" },
+        { error: "Batch ID and File ID are required" },
         { status: 400 }
       );
     }
-    const res = await axios.get(
-      `https://api.openai.com/v1/batches/${id}`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    return NextResponse.json(res.data, { status: 200 });
+    if (file === "batchid") {
+      const res = await openai.batches.retrieve(id);
+      return NextResponse.json(res, { status: 200 });
+    } else {
+      const fileResponse = await openai.files.content(id);
+      const fileContents = await fileResponse.text();
+      return NextResponse.json(fileContents, { status: 200 });
+    }
   } catch (error: unknown) {
     console.error("Registration error:", error);
     return NextResponse.json(

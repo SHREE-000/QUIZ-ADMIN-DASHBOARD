@@ -21,6 +21,7 @@ import FormPopover from "@/src/components/shared/molecular/FormPopover";
 import FormSelect from "@/src/components/shared/molecular/FormSelect";
 import { CategoryDto, Qn, StreamDto, SubDto } from "@/src/utils/interface";
 import BackwardLink from "@/src/components/shared/atomic/BackwardLink";
+import { PopoverText } from "@/src/components/shared/atomic/Popover";
 
 export default function StreamViewPage() {
   const [subject, setSubject] = useState("");
@@ -44,6 +45,8 @@ export default function StreamViewPage() {
   const [uploadedImg, setUploadedImg] = useState<File[]>([]);
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
+  const [aiBatchs, setAiBatchs] = useState<string[]>([]);
+  const [aiBatchRs, setAiBatchRs] = useState<any>(null);
   const ref = useRef<HTMLButtonElement | null>(null);
   const params = useParams();
   const router = useRouter();
@@ -118,6 +121,10 @@ export default function StreamViewPage() {
       setVideoLinks(data.videoContent || []);
       setImg(data.imageContent);
       setPdf(data.pdfContent);
+      setAiBatchs(
+        data.qnBatchData?.map((batch: { batchId: string }) => batch.batchId) ||
+          []
+      );
     };
     try {
       fetchTopic();
@@ -234,6 +241,48 @@ export default function StreamViewPage() {
         type: "error",
         title: "Failed!",
         description: resErr || "An error occurred while updating the subject.",
+      });
+    }
+  };
+
+  const handleRunAiBatch = async (batchId: string) => {
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API}/topic/${topicId}`,
+        { batchId }
+      );
+      if (response.status === 201) {
+        toaster.create({
+          type: "success",
+          title: "Success!",
+          description: "AI Batch executed successfully.",
+        });
+        setAiBatchRs(response.data.result);
+        return <PopoverText />;
+      } else if (response.status === 400) {
+        toaster.create({
+          type: "info",
+          title: "No Resolved!",
+          description: response.data.error || "Batch may not resolve yet.",
+        });
+      } else {
+        toaster.create({
+          type: "error",
+          title: "Failed!",
+          description: "An error occurred while executing the AI batch.",
+        });
+      }
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError<{ error?: string }>;
+      const resErr =
+        axiosError.response?.data?.error ||
+        axiosError.message ||
+        "An error occurred while executing the AI batch.";
+      toaster.create({
+        type: "error",
+        title: "Failed!",
+        description:
+          resErr || "An error occurred while executing the AI batch.",
       });
     }
   };
@@ -365,6 +414,25 @@ export default function StreamViewPage() {
                 handleChangePdf(input?.files ?? null);
               }}
             />
+            <>
+              <h1>AI Batch IDs</h1>
+              {aiBatchs.map((batch, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginBottom: "10px",
+                  }}
+                >
+                  <div style={{ whiteSpace: "pre-line" }}>{batch}</div>{" "}
+                  <button style={{cursor: "pointer"}} onClick={() => handleRunAiBatch(batch)}>Run</button>
+                </div>
+              ))}
+            </>
           </Fieldset.Content>
           <FormPopover
             isEditMode={isEditMode}

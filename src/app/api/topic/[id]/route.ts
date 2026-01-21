@@ -1,3 +1,4 @@
+import { getAiBatchResult } from "@/src/lib/ai";
 import { connectDB } from "@/src/lib/database";
 import { deleteFiles } from "@/src/lib/s3";
 import { Stream } from "@/src/models/stream";
@@ -30,6 +31,54 @@ export async function GET(
       return NextResponse.json({ error: "Subject not found" }, { status: 404 });
     }
     return NextResponse.json(subjectData, { status: 200 });
+  } catch (error: unknown) {
+    console.error("Registration error:", error);
+    return NextResponse.json(
+      { error: (error as Error).message || "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: Request,
+  context: { params: { id: string } }
+) {
+  try {
+    await connectDB();
+    const { id } = await context.params;
+    const { aiBatchId } = await request.json();
+    if (!id || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Topic ID is required" },
+        { status: 400 }
+      );
+    }
+    const topicData = await Topic.findById(id);
+    if (!topicData) {
+      return NextResponse.json(
+        { error: "Topic is not found" },
+        { status: 404 }
+      );
+    }
+    const qnBatchData = topicData.qnBatchData || [];
+    console.log("qnBatchData", qnBatchData,  "aiBatchid", aiBatchId);
+    
+    const isBatchExist = qnBatchData.find((batch) => batch.batchId === aiBatchId);
+    if (!isBatchExist) {
+      return NextResponse.json(
+        { error: "AI Batch ID not found in topic" },
+        { status: 404 }
+      );
+    }
+    const result = await getAiBatchResult({ batch: aiBatchId });
+    if(result.length === 0) {
+      return NextResponse.json(
+        { error: "Batch is may not resolve yet or some other error occurred" },
+        { status: 400 }
+      );
+    }
+    return NextResponse.json({ result }, { status: 200 });
   } catch (error: unknown) {
     console.error("Registration error:", error);
     return NextResponse.json(
