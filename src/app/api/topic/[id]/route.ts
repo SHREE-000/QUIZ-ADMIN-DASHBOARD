@@ -70,9 +70,9 @@ export async function POST(
       );
     }
     const metadata = {
-        subject: topicData.subject,
-        stream: topicData.stream,
-        updatedBy: userId,
+        subject: topicData.subject.toString(),
+        stream: topicData.stream.toString(),
+        updatedBy: 'userId',
         topic: id,
       };
     const result = await getAiBatchResult({ batch: aiBatchId, metadata });
