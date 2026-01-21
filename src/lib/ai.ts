@@ -132,7 +132,18 @@ export const generateInputForQn = (content: string): ResponseInput => {
 //   }
 // };
 
-export const getAiBatchResult = async ({ batch }: { batch: string }) => {
+export const getAiBatchResult = async ({
+  batch,
+  metadata,
+}: {
+  batch: string;
+  metadata: {
+    subject: string;
+    stream: string;
+    updatedBy: string;
+    topic: string;
+  };
+}) => {
   try {
     const payload = [];
     const result: { status: string; output_file_id?: string } =
@@ -145,6 +156,7 @@ export const getAiBatchResult = async ({ batch }: { batch: string }) => {
       const parsedContent = lines.map((line) => JSON.parse(line));
 
       for (let i = 0; i < parsedContent.length; i++) {
+        let type = "PASSAGE";
         try {
           const {
             response: {
@@ -169,14 +181,20 @@ export const getAiBatchResult = async ({ batch }: { batch: string }) => {
               parsedQn = JSON.parse(sanitized);
             } catch (error: unknown) {
               console.warn(
-                `Skipping invalid JSON at index ${i}: ${(error as Error).message}`
+                `Skipping invalid JSON at index ${i}: ${
+                  (error as Error).message
+                }`
               );
               continue; // skip this iteration only
             }
             const { qnCount, totalScore } = validateAiQn(parsedQn.qna);
+            if (qnCount > 1) type = "PASSAGE";
+            else type = "SINGLE";
             payload.push({
               qnCount,
               totalScore,
+              type,
+              ...metadata,
               ...parsedQn,
             });
           } else {
@@ -184,7 +202,10 @@ export const getAiBatchResult = async ({ batch }: { batch: string }) => {
             continue;
           }
         } catch (innerError: unknown) {
-          console.warn(`Error processing item ${i}:`, (innerError as Error).message);
+          console.warn(
+            `Error processing item ${i}:`,
+            (innerError as Error).message
+          );
           continue; // skip current iteration
         }
       }

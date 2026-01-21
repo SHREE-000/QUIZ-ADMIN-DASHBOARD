@@ -47,7 +47,7 @@ export async function POST(
   try {
     await connectDB();
     const { id } = await context.params;
-    const { aiBatchId } = await request.json();
+    const { batchId: aiBatchId } = await request.json();
     if (!id || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Topic ID is required" },
@@ -61,9 +61,7 @@ export async function POST(
         { status: 404 }
       );
     }
-    const qnBatchData = topicData.qnBatchData || [];
-    console.log("qnBatchData", qnBatchData,  "aiBatchid", aiBatchId);
-    
+    const qnBatchData = topicData.qnBatchData || [];    
     const isBatchExist = qnBatchData.find((batch) => batch.batchId === aiBatchId);
     if (!isBatchExist) {
       return NextResponse.json(
@@ -71,14 +69,21 @@ export async function POST(
         { status: 404 }
       );
     }
-    const result = await getAiBatchResult({ batch: aiBatchId });
+    const metadata = {
+        subject: topicData.subject,
+        stream: topicData.stream,
+        updatedBy: userId,
+        topic: id,
+      };
+    const result = await getAiBatchResult({ batch: aiBatchId, metadata });
     if(result.length === 0) {
       return NextResponse.json(
         { error: "Batch is may not resolve yet or some other error occurred" },
         { status: 400 }
       );
     }
-    return NextResponse.json({ result }, { status: 200 });
+    const paylaod = {}
+    return NextResponse.json({ result }, { status: 201 });
   } catch (error: unknown) {
     console.error("Registration error:", error);
     return NextResponse.json(

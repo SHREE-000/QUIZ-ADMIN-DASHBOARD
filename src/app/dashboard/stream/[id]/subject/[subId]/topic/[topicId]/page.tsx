@@ -1,6 +1,12 @@
 "use client";
 
-import { Fieldset, Stack, Heading, SimpleGrid } from "@chakra-ui/react";
+import {
+  Fieldset,
+  Stack,
+  Heading,
+  SimpleGrid,
+  CloseButton,
+} from "@chakra-ui/react";
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import axios, { AxiosError } from "axios";
@@ -46,7 +52,6 @@ export default function StreamViewPage() {
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const [aiBatchs, setAiBatchs] = useState<string[]>([]);
-  const [aiBatchRs, setAiBatchRs] = useState<any>(null);
   const ref = useRef<HTMLButtonElement | null>(null);
   const params = useParams();
   const router = useRouter();
@@ -257,8 +262,6 @@ export default function StreamViewPage() {
           title: "Success!",
           description: "AI Batch executed successfully.",
         });
-        setAiBatchRs(response.data.result);
-        return <PopoverText />;
       } else if (response.status === 400) {
         toaster.create({
           type: "info",
@@ -429,7 +432,12 @@ export default function StreamViewPage() {
                   }}
                 >
                   <div style={{ whiteSpace: "pre-line" }}>{batch}</div>{" "}
-                  <button style={{cursor: "pointer"}} onClick={() => handleRunAiBatch(batch)}>Run</button>
+                  <button
+                    style={{ cursor: "pointer" }}
+                    onClick={() => handleRunAiBatch(batch)}
+                  >
+                    Run
+                  </button>
                 </div>
               ))}
             </>

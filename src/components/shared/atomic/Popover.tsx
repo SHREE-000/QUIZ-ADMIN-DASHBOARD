@@ -1,28 +1,29 @@
-import {
-  // Button,
-  CloseButton,
-  Dialog,
-  Popover,
-  Portal,
-} from "@chakra-ui/react"
-import { useState } from "react"
+import { Popover } from "@chakra-ui/react";
 
-
-export const PopoverText = () => {
-  const [open, setOpen] = useState(false)
-
+export const PopoverText = ({
+  open,
+  closeButton,
+  title,
+  content,
+}: {
+  open: boolean;
+  closeButton?: React.ReactNode;
+  title?: string;
+  content: string;
+}) => {
   return (
-    <Popover.Root open={open} onOpenChange={(e) => setOpen(e.open)}>
-      <Popover.Trigger>Open</Popover.Trigger>
+    <Popover.Root open={open}>
+      <Popover.Trigger>{title}</Popover.Trigger>
       <Popover.Positioner>
         <Popover.Content>
-          <PopoverStatus open={open} />
+          {closeButton}
+          <PopoverStatus open={open} content={content} />
         </Popover.Content>
       </Popover.Positioner>
     </Popover.Root>
-  )
-}
+  );
+};
 
-const PopoverStatus = ({ open }: { open: boolean }) => {
-  return <div>Popover is {open ? "open" : "closed"}</div>
-}
+const PopoverStatus = ({ content }: { open: boolean; content: string }) => {
+  return <div>{content}</div>;
+};
