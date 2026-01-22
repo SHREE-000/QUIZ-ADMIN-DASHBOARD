@@ -73,8 +73,10 @@ export default function RegisterPage() {
       if (res.status === 201) {
         sessionStorage.setItem("user", JSON.stringify(res.data));
         router.push("/dashboard?register=true");
+        router.refresh();
       }
       router.push("/dashboard?register=true");
+      router.refresh();
     } catch (error) {
       console.error(error);
       toaster.create({

@@ -1,67 +1,126 @@
-'use client';
+"use client";
+
+import {
+  Box,
+  Flex,
+  Button,
+  IconButton,
+  Stack,
+  useDisclosure,
+  HStack,
+} from "@chakra-ui/react";
+import { FiMenu, FiX } from "react-icons/fi";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
-export default function Navbar() {
-  const [token, setToken] = useState<string | null>(null);
+interface NavbarProps {
+  isAuthenticated: boolean;
+}
+
+export default function Navbar({ isAuthenticated }: NavbarProps) {
+  console.log("isAuthenticated", isAuthenticated);
+  
+  const { open, onOpen, onClose } = useDisclosure();
   const router = useRouter();
-  useEffect(() => {
-    const user = localStorage.getItem("user") || "";
-    const token = user ? JSON.parse(user).userDetails?.token : null;
-    setToken(token);
-  }, [])
 
-  const logout = () => {
-    localStorage.removeItem("user");
-    setToken(null);
-    router.push("/auth/login");
-  }
+  const handleLogout = async () => {
+    sessionStorage.removeItem("user");
+      await axios.get("/api/logout");
+      router.push("/auth/login");
+      window.location.reload();
+  };
 
-  //   const { colorMode, toggleColorMode } = useColorMode();
-  // const bg = useColorModeValue("red.100", "red.900");
-  // const color = useColorModeValue("yellow.600", "green.600");
-//             <>
-//             <Box
-//       minH="100vh"
-//       bg={bg}
-//       color={color}
-//       display="flex"
-//       flexDirection="column"
-//       alignItems="center"
-//       justifyContent="center"
-//       gap={4}
-//     >
-//       <Text fontSize="2xl" fontWeight="bold">
-//         Chakra UI + Next.js Color Mode Example
-//       </Text>
-
-//       <Text>
-//         Current Mode: <strong>{colorMode}</strong>
-//       </Text>
-
-//       {/* You can use either your custom button or Chakra’s */}
-//       <ColorModeButton />
-
-//       {/* or Chakra’s built-in way */}
-//       <Button onClick={toggleColorMode}>
-//         Toggle manually ({colorMode === "dark" ? "Light" : "Dark"} Mode)
-//       </Button>
-//             <ColorModeButton />
-//             <LightMode>
-//   <Button colorScheme="red">Always light button</Button>
-// </LightMode>
-//     </Box></>
   return (
-    <nav className="navbar">
-      {token ? <div style={{display:"flex", justifyContent:"space-between", width:"100%"}}>
-        <Link href="/dashboard">  <h2>LMS App</h2></Link>
-        <Link href="/profile">Profile</Link>
-        <a onClick={logout} >Logout</a>
-      </div> : <div>
-        <Link href="/auth/login">Login</Link>
-        <Link href="/auth/register">Register</Link>
-      </div>}
-    </nav>
+    <Box bg="gray.800" px={4}>
+      <Flex h={16} alignItems="center" justifyContent="space-between">
+        {/* Left */}
+        <HStack gap={8} alignItems="center">
+          <Box color="white" fontWeight="bold">
+            Quiz App
+          </Box>
+
+          <HStack as="nav" gap={4} display={{ base: "none", md: "flex" }}>
+            <NavLink href="/dashboard">Home</NavLink>
+          </HStack>
+        </HStack>
+
+        {/* Right */}
+        <Flex alignItems="center">
+          <HStack gap={4} display={{ base: "none", md: "flex" }}>
+            {!isAuthenticated ? (
+              <>
+                <NavLink href="/auth/login">Login</NavLink>
+                <NavLink href="/auth/register">Register</NavLink>
+              </>
+            ) : (
+              <Button size="sm" colorScheme="red" onClick={handleLogout}>
+                Logout
+              </Button>
+            )}
+          </HStack>
+
+          {/* Mobile Menu Button */}
+          <IconButton
+            size="md"
+            aria-label="Toggle Menu"
+            display={{ md: "none" }}
+            onClick={open ? onClose : onOpen}
+            ml={2}
+          >
+            {open ? <FiX /> : <FiMenu />}
+          </IconButton>
+        </Flex>
+      </Flex>
+
+      {/* Mobile Menu */}
+      {open && (
+        <Box pb={4} display={{ md: "none" }}>
+          <Stack as="nav" gap={4}>
+            <NavLink href="/dashboard">Home</NavLink>
+
+            {!isAuthenticated ? (
+              <>
+                <NavLink href="/auth/login">Login</NavLink>
+                <NavLink href="/auth/register">Register</NavLink>
+              </>
+            ) : (
+              <Button
+                size="sm"
+                colorScheme="red"
+                onClick={handleLogout}
+                alignSelf="flex-start"
+              >
+                Logout
+              </Button>
+            )}
+          </Stack>
+        </Box>
+      )}
+    </Box>
   );
 }
+
+const NavLink = ({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) => (
+  <Link href={href}>
+    <Box
+      px={2}
+      py={1}
+      rounded="md"
+      color="gray.200"
+      _hover={{
+        textDecoration: "none",
+        bg: "gray.700",
+      }}
+    >
+      {children}
+    </Box>
+  </Link>
+);

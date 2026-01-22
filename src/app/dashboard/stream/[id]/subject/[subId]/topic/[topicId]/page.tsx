@@ -27,7 +27,7 @@ import FormPopover from "@/src/components/shared/molecular/FormPopover";
 import FormSelect from "@/src/components/shared/molecular/FormSelect";
 import { CategoryDto, Qn, StreamDto, SubDto } from "@/src/utils/interface";
 import BackwardLink from "@/src/components/shared/atomic/BackwardLink";
-import { PopoverText } from "@/src/components/shared/atomic/Popover";
+import Spin from "@/src/components/shared/atomic/Spinner";
 
 export default function StreamViewPage() {
   const [subject, setSubject] = useState("");
@@ -52,6 +52,7 @@ export default function StreamViewPage() {
   const [uploadedPdf, setUploadedPdf] = useState<File[]>([]);
   const [videoLinks, setVideoLinks] = useState<string[]>([]);
   const [aiBatchs, setAiBatchs] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
   const ref = useRef<HTMLButtonElement | null>(null);
   const params = useParams();
   const router = useRouter();
@@ -252,10 +253,14 @@ export default function StreamViewPage() {
 
   const handleRunAiBatch = async (batchId: string) => {
     try {
+      setLoading(true);
+      const userString = sessionStorage.getItem("user");
+      const { _id } = userString ? JSON.parse(userString) : { _id: "" };
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API}/topic/${topicId}`,
-        { batchId }
+        { batchId, userId: _id }
       );
+      setLoading(false);
       if (response.status === 201) {
         toaster.create({
           type: "success",
@@ -276,6 +281,7 @@ export default function StreamViewPage() {
         });
       }
     } catch (error: unknown) {
+      setLoading(false);
       const axiosError = error as AxiosError<{ error?: string }>;
       const resErr =
         axiosError.response?.data?.error ||
@@ -459,33 +465,7 @@ export default function StreamViewPage() {
           />
         </Fieldset.Root>
       </Stack>
-      {/* <Stack align="center" p={4} gap={6}>
-        <Heading>Topics Under the {subject} subject</Heading>
-        <SimpleGrid columns={{ base: 1, sm: 2, md: 3, lg: 4 }} gap={6} p={4}>
-          {questions.map(
-            (
-              data: {
-                _id: string;
-                stream: string;
-                subject: string;
-                topic: string;
-                description: string;
-                videoContent: string[];
-                imageContent: string[];
-                pdfContent: string[];
-              },
-              idx: number
-            ) => (
-              <CustomCard
-                data={data}
-                category={"topic"}
-                idx={idx}
-                key={data._id}
-              />
-            )
-          )}
-        </SimpleGrid>
-      </Stack> */}
+      {loading && <Spin />}
     </Stack>
   );
 }

@@ -53,6 +53,7 @@ export default function LoginPage() {
     const userDetails = sessionStorage.getItem("user");
     if (userDetails?.trim()) {
       router.push("/dashboard");
+      router.refresh();
     } else {
       try {
         const res = await axios.post(
@@ -65,6 +66,7 @@ export default function LoginPage() {
         if (res.status === 200) {
           sessionStorage.setItem("user", JSON.stringify(res.data));
           router.push("/dashboard?login=true");
+          router.refresh();
         }
       } catch (error: unknown) {
                 toaster.create({

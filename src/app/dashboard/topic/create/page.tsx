@@ -14,7 +14,7 @@ import ButtonWithBackLink from "@/src/components/shared/atomic/ButtonWithBackLin
 import FormSelect from "@/src/components/shared/molecular/FormSelect";
 import { CategoryDto, StreamDto, SubDto } from "@/src/utils/interface";
 
-export default function SubjectCreatePage() {
+export default function TopicCreatePage() {
   const [topic, setTopic] = useState("");
   const [stream, setStream] = useState<string>("");
   const [streams, setStreams] = useState<CategoryDto[]>([]);

@@ -30,11 +30,20 @@ export async function POST(request: Request) {
     if (!process.env.JWT_SECRET) {
       throw new Error('JWT_SECRET is not defined');
     }
+    const token = jwt.sign(metaData, process.env.JWT_SECRET as string);
     const payload = {
-      access_token: jwt.sign(metaData, process.env.JWT_SECRET as string),
+      access_token: token,
       ...metaData,
     };
-    return NextResponse.json(payload, { status: 201 });
+    const response = NextResponse.json(payload, { status: 200 });
+    response.cookies.set("token", token, {
+    httpOnly: true,
+    // secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 10, // 10 day
+  });
+  return response;
   } catch (error: unknown) {
     console.error("Registration error:", error);
     return NextResponse.json(

@@ -1,9 +1,11 @@
 import { getAiBatchResult } from "@/src/lib/ai";
 import { connectDB } from "@/src/lib/database";
 import { deleteFiles } from "@/src/lib/s3";
+import { Question } from "@/src/models/question";
 import { Stream } from "@/src/models/stream";
 import { Subject } from "@/src/models/subject";
 import { Topic } from "@/src/models/topic";
+import User from "@/src/models/user";
 import { STREAM_S3_PATH, TOPIC_CATEGORY } from "@/src/utils/constant";
 import {
   mongoUpdateErrorValidation,
@@ -44,10 +46,12 @@ export async function POST(
   request: Request,
   context: { params: { id: string } }
 ) {
+  const session = await mongoose.startSession();
+  session.startTransaction();
   try {
     await connectDB();
     const { id } = await context.params;
-    const { batchId: aiBatchId } = await request.json();
+    const { batchId: aiBatchId, userId } = await request.json();
     if (!id || !id.trim() || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Topic ID is required" },
@@ -58,6 +62,14 @@ export async function POST(
     if (!topicData) {
       return NextResponse.json(
         { error: "Topic is not found" },
+        { status: 404 }
+      );
+    }
+
+    const userData = await User.findById(userId);
+    if (!userData) {
+      return NextResponse.json(
+        { error: "User is not found" },
         { status: 404 }
       );
     }
@@ -72,20 +84,25 @@ export async function POST(
     const metadata = {
         subject: topicData.subject.toString(),
         stream: topicData.stream.toString(),
-        updatedBy: 'userId',
+        updatedBy: userId,
         topic: id,
       };
-    const result = await getAiBatchResult({ batch: aiBatchId, metadata });
-    if(result.length === 0) {
+    const payload = await getAiBatchResult({ batch: aiBatchId, metadata });
+    if(payload.length === 0) {
       return NextResponse.json(
         { error: "Batch is may not resolve yet or some other error occurred" },
         { status: 400 }
       );
     }
-    const paylaod = {}
-    return NextResponse.json({ result }, { status: 201 });
+    await Question.insertMany(payload, { session });
+    await Topic.updateOne({_id: id}, {$pull: {qnBatchData: {batchId: aiBatchId}}}).session(session);
+    await session.commitTransaction();
+    session.endSession();
+    return NextResponse.json({ payload }, { status: 201 });
   } catch (error: unknown) {
     console.error("Registration error:", error);
+    await session.abortTransaction();
+    session.endSession();
     return NextResponse.json(
       { error: (error as Error).message || "Internal Server Error" },
       { status: 500 }
